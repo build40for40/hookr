@@ -32,7 +32,7 @@ const CANT_READ = "Hookr can't read this tab yet. Open an article, like a Substa
 
 // ---- Lenses ---------------------------------------------------------------
 
-// Every page opens on Best line, her words exactly. The other lenses are rated
+// Every page opens on Pull quote, her words exactly. The other lenses are rated
 // for fit once the page is read: good fits first, reaches last and quiet.
 const levelOf = id => (id === DEFAULT_MOOD ? null : fit?.[id]?.level in FITS ? fit[id].level : null);
 
@@ -80,7 +80,7 @@ function pick(id) {
   else write();
 }
 
-// Fit arrives while Best line is being written. A late answer for a page the
+// Fit arrives while Pull quote is being written. A late answer for a page the
 // author has since left is dropped.
 async function rate() {
   const asked = page;
@@ -127,7 +127,7 @@ function showPost(post) {
 }
 
 // A stretch gets a quiet line above the post; a reach she chose to see keeps
-// its warning. Good fits and Best line say nothing.
+// its warning. Good fits and Pull quote say nothing.
 function stretch() {
   const level = levelOf(mood);
   const line = $('stretch');
