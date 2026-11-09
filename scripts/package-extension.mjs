@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 export const NAME = 'hookr';
 export const LIVE_API = 'https://hookr-api.40for40.workers.dev';
 export const RUNTIME_FILES = [
-  'manifest.json', 'api.js', 'page.js', 'popup.html', 'popup.css', 'popup.js',
+  'manifest.json', 'api.js', 'page.js', 'popup.html', 'popup.css', 'popup.js', 'moods.js', 'trace.js',
   'icons/icon-16.png', 'icons/icon-32.png', 'icons/icon-48.png', 'icons/icon-128.png',
 ];
 const DEV_API_LINE = /^export const DEFAULT_API = 'http:\/\/localhost:8787';$/m;
