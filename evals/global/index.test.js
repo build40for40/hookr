@@ -31,6 +31,13 @@ test('exact excerpt does not prove unsupported output claims', () => {
   assert.equal(r.checks.find(c => c.id === 'source_excerpt').status, 'pass');
   assert.equal(r.judgments.find(c => c.id === 'source_fidelity').status, 'not_assessed');
 });
+test('excerpt validation matches Worker quote typography without accepting stitched passages', () => {
+  const source = 'She said “start small.” Then we chose one folder. It wasn’t easy.';
+  const r = result({ article: source, output: { post: 'Start small.', excerpt: 'It wasn\'t easy.' } });
+  assert.equal(r.checks.find(c => c.id === 'source_excerpt').status, 'pass');
+  const stitched = result({ article: source, output: { post: 'Start small.', excerpt: 'She said “start small.” It wasn’t easy.' } });
+  assert.equal(stitched.checks.find(c => c.id === 'source_excerpt').status, 'fail');
+});
 test('claim mapping rejects fabricated quotes; records explicit fidelity failure', () => {
   const judgment = { score: 0, reason: 'Changes may to will', reviewer: 'human:Samira', claims: [{ claim: 'Start small.', quote: 'Start small.' }] };
   assert.equal(result({ judgments: { source_fidelity: judgment } }).readiness, 'fail');

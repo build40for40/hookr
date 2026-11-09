@@ -2,6 +2,7 @@ import { LENSES, DEFAULT_LENS, lensDefinitionFor } from '../../prompts/lenses/in
 import { sourceFitFor } from '../fit/index.js';
 import twitter from 'twitter-text';
 import { validateFormat } from '../../worker/formats.js';
+import { excerptInArticle } from '../../worker/post.js';
 
 export const CRITERIA = Object.freeze([
   'source_fidelity', 'naturalness', 'author_voice', 'lens_fit',
@@ -37,8 +38,8 @@ export function evaluateOutput({ article, output, format = 'tweet', platform = '
   const excerpt = typeof output?.excerpt === 'string' ? output.excerpt : '';
   const checks = [check('nonempty_output', post.trim().length > 0, 'A nonempty post is required')];
   if (lens !== undefined && lens !== null) checks.push(check('known_lens', Boolean(lensDefinition), 'Selected lens must have registered instructions; no silent evaluation fallback'));
-  checks.push(check('source_excerpt', Boolean(excerpt.trim()) && normalize(article).includes(normalize(excerpt)),
-    'Exact contiguous source excerpt after NFC and whitespace normalization; does not prove claim support'));
+  checks.push(check('source_excerpt', excerptInArticle(excerpt, article),
+    'Same contiguous-excerpt check as the Worker, normalizing whitespace, Unicode and quote typography; does not prove claim support'));
   const aliases = { longform: 'essay', shorts: 'shorts', instagram: 'caption', thread: 'thread', tweet: 'tweet' };
   const kind = aliases[format] ?? format;
   const canonical = kind === 'caption' ? 'instagram' : kind;
