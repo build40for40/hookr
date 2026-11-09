@@ -1,10 +1,10 @@
-// Kate Marshall's MVP test article, for previewing the popup without Chrome or
+// Kate Marshall's MVP test article, for previewing the panel without Chrome or
 // the API (design/preview.html). Only the paragraphs the samples quote are here.
 // https://katebmarshall.substack.com/p/before-you-turn-on-your-ai-agentdo
 //
 // Every hook is her words, copied exactly. A mood only changes which passage is
 // picked and where the lines break, never a word. `drafted` is the one exception:
-// it shows how the popup flags a post that isn't word for word.
+// it shows how the panel flags a post that isn't word for word.
 const paragraphs = [
   'Every major AI company now offers a personal AI agent, and each one asks for access to your files, email, and calendar on day one. Most people will say yes to all of it before they think about what those accounts hold.',
   'Think about what is in your drive right now. Tax returns. Passwords saved in a file called “misc.” Contracts with client names. An old performance review. If you connect an agent to your whole drive, it can read all of it. Ewhhh….',

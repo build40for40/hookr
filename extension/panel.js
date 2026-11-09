@@ -1,22 +1,26 @@
 import { characters, sourceLabel, wordCount, writePost } from './api.js';
 import { DEFAULT_MOOD, MOODS, moodFor } from './moods.js';
-import { readPage } from './page.js';
+import { readPage, tabNotice } from './page.js';
 import { clip, trace } from './trace.js';
 
 const LIMIT = 280;
 const $ = id => document.getElementById(id);
 
-// Opened outside the extension (design/preview.html), the popup runs on Kate's
+// Opened outside the extension (design/preview.html), the panel runs on Kate's
 // sample article instead of a tab and the API. ?state= pins one screen.
 const preview = !globalThis.chrome?.tabs;
 const params = new URLSearchParams(location.search);
 const sample = preview ? (await import('../design/sample.js')).SAMPLE : null;
+const windowId = preview ? null : (await chrome.windows.getCurrent()).id;
 
 let page;
 let mood = params.get('mood') ?? remembered() ?? DEFAULT_MOOD;
 let attempt = 0;
 let original = '';
 let run = 0;
+let looks = 0;
+
+const CANT_READ = "Hookr can't read this tab yet. Open an article, like a Substack post, and click the Hookr icon in your toolbar.";
 
 // ---- Moods ----------------------------------------------------------------
 
@@ -40,7 +44,6 @@ for (const { id, name } of MOODS) {
     if (id === mood) return;
     setMood(id);
     try { localStorage.setItem('hookr.mood', id); } catch {}
-    chip.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     attempt = 0;
     if (page) write();
   });
@@ -94,11 +97,17 @@ function count() {
 
 // ---- Reading and writing --------------------------------------------------
 
-async function read() {
+// Reading a tab needs the activeTab grant from a click on the Hookr icon. It
+// lasts until that tab leaves the site, so other tabs fail until clicked.
+async function read(tabId) {
   if (preview) return sample.page;
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: readPage });
+  tabId ??= (await chrome.tabs.query({ active: true, windowId }))[0]?.id;
+  const [{ result }] = await chrome.scripting.executeScript({ target: { tabId }, func: readPage });
   return result;
+}
+
+async function peek() {
+  try { return await read(); } catch { return null; }
 }
 
 async function hook() {
@@ -131,18 +140,54 @@ $('copy').addEventListener('click', async () => {
 });
 $('again').addEventListener('click', () => { attempt += 1; write(); });
 $('retry').addEventListener('click', () => (page ? write() : start()));
+$('hook-here').addEventListener('click', () => start());
 
-async function start() {
+function describe(here) {
+  $('source').textContent = here ? sourceLabel(here) : '';
+  $('words').textContent = here ? `Read ${wordCount(here.text).toLocaleString('en-GB')} words` : '';
+  $('promise').textContent = '';
+}
+
+async function start(tabId) {
+  const mine = ++run;
   show('reading');
-  try {
-    page = await read();
-  } catch {
-    return fail("Hookr can't read this page. Try it on an article, like a Substack post.");
-  }
-  if (!page?.text) return fail('This page has no words to work with. Try it on an article.');
-  $('source').textContent = sourceLabel(page);
-  $('words').textContent = `Read ${wordCount(page.text).toLocaleString('en-GB')} words`;
+  let here = null;
+  try { here = await read(tabId); } catch {}
+  if (mine !== run) return;
+  looks += 1;
+  notice(null);
+  page = here?.text ? here : null;
+  describe(page);
+  if (!here) return fail(CANT_READ);
+  if (!page) return fail('This page has no words to work with. Try it on an article.');
   await write();
+}
+
+// The panel stays open across tabs. Moving tab or page offers the new one
+// instead of replacing a post the author may still be copying.
+function notice(kind, here) {
+  $('elsewhere').hidden = !kind;
+  $('hook-here').hidden = kind !== 'new';
+  if (kind === 'new') $('elsewhere-text').textContent = `Now on ${here.title || sourceLabel(here)}`;
+  if (kind === 'unreadable') $('elsewhere-text').textContent = "Hookr can't read this tab. Click the Hookr icon in your toolbar to read it.";
+}
+
+async function look() {
+  const mine = ++looks;
+  const here = await peek();
+  if (mine === looks) notice(tabNotice(page, here), here);
+}
+
+function listen() {
+  chrome.runtime.onMessage.addListener(message => {
+    if (message?.type === 'hook' && message.windowId === windowId) start(message.tabId);
+  });
+  chrome.tabs.onActivated.addListener(info => {
+    if (info.windowId === windowId) look();
+  });
+  chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
+    if (tab.active && tab.windowId === windowId && (change.status === 'complete' || change.url)) look();
+  });
 }
 
 // Pinned screens for the preview board.
@@ -160,9 +205,25 @@ function pin(state) {
     count();
   }
   if (state === 'failed') fail("Couldn't write a post just now. Give it another go.");
+  if (state === 'elsewhere') {
+    showPost(hooks[0]);
+    notice('new', { ...sample.page, title: 'Five things to do before your AI agent reads your email' });
+  }
+  if (state === 'unreadable') {
+    showPost(hooks[0]);
+    notice('unreadable');
+  }
+  if (state === 'blocked') {
+    page = null;
+    describe(null);
+    fail(CANT_READ);
+  }
 }
 
 setMood(mood);
 requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.add('ready')));
 if (preview && params.get('state')) pin(params.get('state'));
-else start();
+else {
+  if (!preview) listen();
+  start();
+}

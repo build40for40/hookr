@@ -26,8 +26,9 @@ Copy for the dashboard fields. Check every line against the build you upload, an
 **Permission reasons:**
 
 - Host permission for `https://hookr-api.40for40.workers.dev/*`: sends the article text of the page the user asked Hookr to read and gets back one post for X. No other site is contacted.
-- `activeTab`: reads the current tab only when the user clicks the toolbar button.
+- `activeTab`: reads the current tab only after the user clicks the toolbar button on it. The side panel stays open across tabs, but it can only read a tab the user clicked the button on, and only until that tab leaves the site.
 - `scripting`: runs the one function that copies that tab's visible article text.
+- `sidePanel`: shows Hookr in Chrome's side panel, opened by the toolbar button, so the post sits next to the article while the author edits and copies it.
 
 **Remote code:** No. All code is in the package. The service returns JSON data only.
 
@@ -37,7 +38,7 @@ Copy for the dashboard fields. Check every line against the build you upload, an
 
 ## Test instructions for reviewers
 
-> Open a public Substack article, then click the Hookr toolbar button. <Steps a reviewer can follow with no account, or the test account to use. Never a real user's account.>
+> Open a public Substack article, then click the Hookr toolbar button. Hookr opens in the side panel and writes one post from the article. <Steps a reviewer can follow with no account, or the test account to use. Never a real user's account.>
 
 ## Distribution tab
 

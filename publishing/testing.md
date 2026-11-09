@@ -11,8 +11,13 @@ Chrome 137 and later ignore `--load-extension` on the command line, so these che
 | Loads in Chrome | Not run | No errors on `chrome://extensions`; name, version and icon are right |
 | Icon | Not run | Readable in the toolbar in light and dark Chrome themes |
 | Install prompt | Not run | Asks only for what the extension uses |
+| Opens the side panel | Not run | Clicking the icon opens Hookr in the side panel, never a popup, and the panel fills its height |
 | Main flow | Not run | On a text-only Substack article, clicking the icon shows one post of 280 characters or fewer, in the author's words |
-| Unreadable page | Not run | On `chrome://extensions` or the Web Store the popup says it can't read the page |
+| Custom domain | Not run | The main flow works on a Substack post on its own domain, with no extra permission prompt |
+| Switching tab | Not run | On another tab the post stays and the panel says it can't read the tab; clicking the icon there hooks that tab |
+| Same site, new page | Not run | Following a link to another post on the same site keeps the post and offers **Hook this page** |
+| Panel width | Not run | Dragging the panel from narrowest to widest leaves no horizontal scroll and nothing cut off |
+| Unreadable page | Not run | On `chrome://extensions` or the Web Store, clicking the icon opens the panel and it says it can't read the tab |
 | Service down | Not run | A plain error, nothing broken |
 | Privacy check | Not run | DevTools Network tab shows requests only to the Hookr service, carrying only the article text |
 | Store install | Not run | Installing from the store gives the same version as the tested ZIP |

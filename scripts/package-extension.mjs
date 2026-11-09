@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 export const NAME = 'hookr';
 export const LIVE_API = 'https://hookr-api.40for40.workers.dev';
 export const RUNTIME_FILES = [
-  'manifest.json', 'api.js', 'page.js', 'popup.html', 'popup.css', 'popup.js', 'moods.js', 'trace.js',
+  'manifest.json', 'background.js', 'api.js', 'page.js', 'panel.html', 'panel.css', 'panel.js', 'moods.js', 'trace.js',
   'icons/icon-16.png', 'icons/icon-32.png', 'icons/icon-48.png', 'icons/icon-128.png',
 ];
 const DEV_API_LINE = /^export const DEFAULT_API = 'http:\/\/localhost:8787';$/m;
@@ -55,6 +55,7 @@ export function checkManifest(manifest) {
   for (const size of ['16', '32', '48', '128']) {
     if (manifest.icons?.[size] !== `icons/icon-${size}.png`) problems.push(`icons.${size} must be icons/icon-${size}.png`);
   }
+  if (manifest.side_panel && manifest.action?.default_popup) problems.push('action.default_popup stops the toolbar button opening the side panel');
   for (const file of referencedFiles(manifest)) {
     if (!RUNTIME_FILES.includes(file)) problems.push(`${file} is referenced by the manifest but not in RUNTIME_FILES`);
   }

@@ -2,7 +2,7 @@
 
 A browser extension for Day 6 of [40 for 40](https://build40for40.com), built live on [Twitch](https://www.twitch.tv/40for40).
 
-Hookr is for published authors who want a marketing drip feed from writing they've already done. Open one of your articles, say a Substack post, click Hookr, and it hands back one post for X built around a hook from your own words. Nothing invented, and sized for X's 280 characters.
+Hookr is for published authors who want a marketing drip feed from writing they've already done. Open one of your articles, say a Substack post, click Hookr, and its side panel hands back one post for X built around a hook from your own words. Nothing invented, and sized for X's 280 characters.
 
 ## Run it locally
 
@@ -16,11 +16,14 @@ npm run dev
 
 That starts the API on http://localhost:8787. Then:
 
-1. Open `chrome://extensions` and turn on **Developer mode**.
+1. Open `chrome://extensions` in Chrome 116 or later and turn on **Developer mode**.
 2. Click **Load unpacked** and choose this repo's `extension/` folder.
-3. Pin Hookr from the puzzle-piece menu, open an article and click its icon.
+3. Pin Hookr from the puzzle-piece menu, open an article and click its icon. Hookr opens in the side panel, reads the page and writes a post.
+4. The panel stays open when you switch tabs. Hookr can only read a tab after you click its icon there, so click it again on each article you want to hook. Moving to another page on a site you already clicked on shows **Hook this page**.
 
-No build step: after changing extension files, click **Reload** on its card.
+No build step: after changing extension files, click **Reload** on its card, then click the icon again (reloading closes the panel). Right-click inside the panel and choose **Inspect** for its console.
+
+To check the panel's look without Chrome or the API, serve the repo (`python3 -m http.server`) and open http://localhost:8000/design/preview.html: every screen and mood, plus the panel at 320, 420 and 600px wide.
 
 ## Commands
 

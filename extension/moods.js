@@ -1,4 +1,4 @@
-// The moods an author can pick. Each one's colours and type live in popup.css
+// The moods an author can pick. Each one's colours and type live in panel.css
 // under [data-mood="id"]. MrBeast and TikTok are working names: rename them
 // before the store listing.
 export const MOODS = [
