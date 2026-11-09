@@ -19,7 +19,8 @@ test('every non-tweet platform variant reaches its prompt through authenticated 
   const script = Array(150).fill('Source').join(' ');
   const posts = ['Start small.', 'Give it only the files it needs.', 'Read-only access may help you spot mistakes.'];
   const cases = [
-    ['essay', 'substack', 'Start small.'], ['essay', 'linkedin', 'Start small.'],
+    ['feed', 'linkedin', 'Start small.'], ['feed', 'threads', 'Start small.'],
+    ['essay', 'substack', 'Start small.'], ['essay', 'linkedin', 'Start small.'], ['essay', 'x', 'Start small.'],
     ['shorts', 'youtube', script], ['instagram', 'instagram', 'Start small.'],
     ['thread', 'x', posts.join('\n\n')], ['thread', 'threads', posts.join('\n\n')],
   ];
@@ -40,7 +41,7 @@ test('every non-tweet platform variant reaches its prompt through authenticated 
 });
 
 test('invalid format/platform is rejected before model access; missing format defaults to tweet', async () => {
-  for (const body of [{format:'constructor'}, {format:null}, {format:{}}, {format:{toString:'x'}}, {format:['tweet']}, {format:'essay', platform:'x'}, {platform:[]}, {platform:{toString:'x'}}, {format:'shorts',platform:'threads'}]) {
+  for (const body of [{format:'constructor'}, {format:null}, {format:{}}, {format:{toString:'x'}}, {format:['tweet']}, {format:'essay', platform:'youtube'}, {format:'feed', platform:'x'}, {platform:[]}, {platform:{toString:'x'}}, {format:'shorts',platform:'threads'}]) {
     assert.equal((await send(body)).status, 400);
   }
   assert.deepEqual(selectionFor(), {format:'tweet', platform:'x'});
@@ -49,6 +50,8 @@ test('invalid format/platform is rejected before model access; missing format de
 
 test('mechanical format guards cover weighted thread limits, duration, caption and essay caps', () => {
   const reply = post => ({post, excerpt});
+  assert.ok(validateFormat(reply('a'.repeat(501)), 'feed', 'linkedin'));
+  assert.equal(validateFormat(reply('a'.repeat(500)), 'feed', 'threads'), null);
   assert.ok(validateFormat(reply('a'.repeat(2201)), 'instagram', 'instagram'));
   assert.equal(validateFormat(reply('a'.repeat(2200)), 'instagram', 'instagram'), null);
   assert.ok(validateFormat(reply('word '.repeat(701)), 'essay', 'substack'));

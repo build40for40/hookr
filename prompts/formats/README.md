@@ -1,6 +1,6 @@
 # Output formats
 
-The Worker now supports five format families and seven platform variants. These are the five agreed product types; no sixth type has been invented. Existing extension clients still request tweets unchanged. Lawrence owns adding the format controls and suitable result rendering to the UI.
+The Worker supports six format families and ten platform variants: the five agreed in card 218 plus a short feed post for LinkedIn and Threads. The extension's format picker (`extension/formats.js`) sends `format` and `platform` and renders each result.
 
 ## Frontend contract
 
@@ -13,12 +13,13 @@ Send `POST /post` (access codes are off for now, so no `Authorization` header is
 | Stable format ID | Platform values (first is default) | Product output rules |
 |---|---|---|
 | `tweet` (default) | `x` | One valid X post, at most 280 weighted characters |
-| `essay` | `substack`, `linkedin` | Article/essay with title; target 400–700 words, maximum 700; shorter is allowed when source material is limited |
+| `feed` | `linkedin`, `threads` | One feed post, at most 500 NFC Unicode code points |
+| `essay` | `substack`, `linkedin`, `x` | Article/essay with title; target 400–700 words, maximum 700; shorter is allowed when source material is limited |
 | `shorts` | `youtube` | Spoken-only script, 150–300 words; estimated 60–120 seconds at 150 words/minute |
 | `instagram` | `instagram` | One caption, target 80–160 words; maximum 2,200 NFC Unicode code points |
 | `thread` | `x`, `threads` | 3–5 distinct posts; X at most 280 weighted characters each, Threads at most 500 NFC Unicode code points each |
 
-The essay for LinkedIn is an **article**, not a feed update. The word targets, maximum essay length, thread size and speaking rate are product defaults, not platform maximums or guarantees of actual reading time. Scripts need a timed read aloud. X threads work conservatively without requiring a paid plan; paid-only longer posts are not implemented. Threads text attachments are not implemented. The conservative caption/Threads caps are product rules; verify a final draft in its native composer before posting.
+The essay for LinkedIn or X is an **article**, not a feed update; `feed` is the feed update. The word targets, maximum essay length, thread size and speaking rate are product defaults, not platform maximums or guarantees of actual reading time. Scripts need a timed read aloud. X threads work conservatively without requiring a paid plan; paid-only longer posts are not implemented. Threads text attachments are not implemented. The conservative caption/Threads caps are product rules; verify a final draft in its native composer before posting.
 
 For new formats, the response keeps `post` as copyable text, with the source `excerpt` and `length`, and adds `format` and `platform`. Non-tweet `length` is NFC Unicode code points, **not** X weighted length. Threads also return `posts: string[]`; `post` equals `posts.join('\n\n')`. Shorts also return `estimatedSeconds: number`.
 
