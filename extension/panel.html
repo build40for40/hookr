@@ -2,8 +2,9 @@
 <html lang="en-GB" data-mood="elegant">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hookr</title>
-  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="panel.css">
 </head>
 <body>
   <header class="bar">
@@ -13,7 +14,12 @@
   <div class="moods" id="moods" role="group" aria-label="Mood"></div>
   <p class="mood-line" id="mood-line"></p>
 
-  <div aria-live="polite">
+  <div class="elsewhere" id="elsewhere" role="status" hidden>
+    <p id="elsewhere-text"></p>
+    <button class="quiet" id="hook-here">Hook this page</button>
+  </div>
+
+  <main aria-live="polite">
     <section id="reading" class="reading">
       <p>Reading your page…</p>
       <small>Looking for the line worth posting.</small>
@@ -42,10 +48,10 @@
         <button class="quiet" id="retry">Try again</button>
       </div>
     </section>
-  </div>
+  </main>
 
   <footer class="foot"><span id="words"></span><span id="promise"></span></footer>
 
-  <script type="module" src="popup.js"></script>
+  <script type="module" src="panel.js"></script>
 </body>
 </html>

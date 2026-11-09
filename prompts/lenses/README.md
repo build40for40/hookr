@@ -20,7 +20,7 @@ The Worker composes the approved base prompt from `worker/prompt.js` with one su
 
 Labels are not IDs. Rename a button without changing its stable ID when its meaning is unchanged. To change its meaning, edit its own sub-prompt file or introduce a new ID. Never silently repurpose a saved ID for an unrelated lens: existing installs remember it. Unknown retired IDs fall back to Elegant.
 
-To add a lens, add its UI metadata in `extension/moods.js`, its own sub-prompt file and registration in `index.js`, and its visual tokens in `extension/popup.css`. No Worker route or model call logic changes are needed. The frontend coverage test catches missing sub-prompts. Remove its UI entry when retiring a lens; keeping its sub-prompt briefly supports older extension versions.
+To add a lens, add its UI metadata in `extension/moods.js`, its own sub-prompt file and registration in `index.js`, and its visual tokens in `extension/panel.css`. No Worker route or model call logic changes are needed. The frontend coverage test catches missing sub-prompts. Remove its UI entry when retiring a lens; keeping its sub-prompt briefly supports older extension versions.
 
 Run `npm run check` and `npm run extension:package:dev`. Live evaluation should compare the same source across lenses, scoring fidelity and exact excerpts before style. Mood instructions must never weaken the base source rules or change the parsed reply labels. A rewritten post may correctly be flagged by the frontend as not word for word; it must never be presented as a verbatim quotation.
 

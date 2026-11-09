@@ -4,9 +4,10 @@ An inventory for writing this app's section of https://build40for40.com/privacy/
 
 ## What the extension does on the device
 
-- **Permissions:** `activeTab`, `scripting` and one host permission, the Hookr service. No `storage`, `tabs`, cookies, history or always-on content scripts.
-- **Pages read:** only the tab the user is on, and only when they click the toolbar button. It copies the visible text of the article (`extension/page.js`); the title and URL stay in the popup for its header.
-- **Stored locally:** the mood the author last picked (one word, such as `calm`, in the popup's own `localStorage`). Posts shown in the popup are gone when it closes.
+- **Permissions:** `activeTab`, `scripting`, `sidePanel` and one host permission, the Hookr service. No `storage`, `tabs`, cookies, history, optional host permissions or always-on content scripts. The background service worker only opens the side panel on a toolbar click; it reads nothing.
+- **Pages read:** only a tab where the user clicked the toolbar button, through Chrome's `activeTab` grant, which ends when that tab leaves the site. It copies the visible text of the article (`extension/page.js`); the title and URL stay in the side panel for its header.
+- **Re-reading while the panel is open:** when the author switches tab or the tab loads another page, the panel tries to read the active tab again on the device, to offer "Hook this page". That only works on a tab the user already clicked the button on, and nothing leaves the device until the author asks for a post. The panel listens to Chrome's tab events, which without the `tabs` permission carry no URLs or titles for other tabs.
+- **Stored locally:** the mood the author last picked (one word, such as `calm`, in the panel's own `localStorage`). Posts shown in the panel are gone when it closes.
 - **Analytics or tracking code:** none.
 
 ## What it sends to the Hookr service (Cloudflare Worker)
