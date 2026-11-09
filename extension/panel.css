@@ -1,7 +1,7 @@
-/* Each mood is one set of tokens. Elegant is the Hookr brand: paper, ink and red ink.
-   --accent decorates (rules, marks, the reading lines); --accent-text is accent you can read. */
-:root,
-[data-mood="elegant"] {
+/* The Hookr brand: paper, ink and red ink. --accent decorates (rules, marks, the
+   reading lines); --accent-text is accent you can read. The --fit-* colours mark
+   how well each lens suits the page, and only ever sit beside a shape and words. */
+:root {
   color-scheme: light;
   --paper: #f4eee3;
   --sheet: #fbf8f2;
@@ -14,95 +14,11 @@
   --button: var(--ink);
   --button-ink: var(--paper);
   --button-hover: var(--accent);
+  --fit-strong: #2f7a3e;
+  --fit-thin: #c08a00;
+  --fit-thin-text: #7a5600;
+  --fit-none: #8f877c;
   --font: "Newsreader", Georgia, "Times New Roman", serif;
-  --post-font: var(--font);
-  --post-weight: 400;
-  --post-style: normal;
-  --post-shadow: none;
-}
-
-[data-mood="calm"] {
-  --paper: #e9f0f7;
-  --sheet: #f7fafd;
-  --ink: #13263a;
-  --ink-soft: #4a5e72;
-  --rule: #c5d4e3;
-  --accent: #2d5b88;
-  --accent-text: #2d5b88;
-}
-
-[data-mood="light"] {
-  --paper: #fff3c2;
-  --sheet: #fffbe8;
-  --ink: #2b2410;
-  --ink-soft: #66561f;
-  --rule: #ead58a;
-  --accent: #e07a1f;
-  --accent-text: #9a4505;
-  --button-hover: #9a4505;
-  --font: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
-  --post-weight: 500;
-}
-
-[data-mood="serious"] {
-  --paper: #e8eaee;
-  --sheet: #f7f8fa;
-  --ink: #0f172a;
-  --ink-soft: #475569;
-  --rule: #c8ced8;
-  --accent: #1e3a5f;
-  --accent-text: #1e3a5f;
-  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --post-weight: 500;
-}
-
-[data-mood="dramatic"] {
-  color-scheme: dark;
-  --paper: #120e10;
-  --sheet: #1d171a;
-  --ink: #f4ede7;
-  --ink-soft: #b8aca6;
-  --rule: #3b3035;
-  --accent: #e8475d;
-  --accent-text: #ff8597;
-  --button: #f4ede7;
-  --button-ink: #120e10;
-  --button-hover: #e8475d;
-  --post-style: italic;
-}
-
-[data-mood="beast"] {
-  --paper: #c8102e;
-  --sheet: #ffffff;
-  --ink: #ffffff;
-  --post-ink: #111111;
-  --ink-soft: #ffe3e8;
-  --rule: #e2576d;
-  --accent: #ffd400;
-  --accent-text: #ffffff;
-  --button: #ffd400;
-  --button-ink: #111111;
-  --button-hover: #ffffff;
-  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --post-font: "Arial Black", "Helvetica Neue", Arial, sans-serif;
-  --post-weight: 900;
-}
-
-[data-mood="tiktok"] {
-  color-scheme: dark;
-  --paper: #000000;
-  --sheet: #121214;
-  --ink: #ffffff;
-  --ink-soft: #a8a8b0;
-  --rule: #2c2c31;
-  --accent: #25f4ee;
-  --accent-text: #25f4ee;
-  --button: #fe2c55;
-  --button-ink: #000000;
-  --button-hover: #25f4ee;
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --post-weight: 600;
-  --post-shadow: -1px -1px 0 rgba(37, 244, 238, 0.55), 1px 1px 0 rgba(254, 44, 85, 0.55);
 }
 
 * { box-sizing: border-box; }
@@ -118,22 +34,27 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Fade between moods only once the panel has drawn, so it never opens mid-fade. */
-.ready body { transition: background-color 0.25s ease, color 0.25s ease; }
-
 [hidden] { display: none !important; }
 
 .bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--rule); font-weight: 500; font-size: 16px; }
 .bar img { width: 22px; height: 22px; }
 .bar .source { flex: 1; min-width: 0; text-align: right; font-weight: 400; font-size: 13px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* The mood picker. Each chip carries data-mood too, so it wears its own mood's
-   paper, ink and type: a preview of what it switches to. --ring is the panel's ink. */
-.moods { --ring: var(--ink); display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px 2px; }
-.mood { flex: none; font: 500 13px/1.4 var(--font); padding: 4px 11px; border-radius: 999px; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); white-space: nowrap; margin: 2px 0; }
-.mood:hover { border-color: var(--accent); }
-.mood[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--ring); }
+/* The lens picker. Each chip carries its fit: a dot for a good fit, a half dot
+   for a stretch, an empty ring for a reach. Reaches stay clickable, just quiet. */
+.moods { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px 2px; }
+.mood { flex: none; display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1.4 var(--font); padding: 4px 11px; border-radius: 999px; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); white-space: nowrap; margin: 2px 0; }
+.mood:hover { border-color: var(--ink-soft); }
+.mood[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.mood .fit { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.mood[data-fit="strong"] .fit { background: var(--fit-strong); }
+.mood[data-fit="thin"] .fit { background: linear-gradient(90deg, var(--fit-thin) 50%, transparent 50%); box-shadow: inset 0 0 0 1.5px var(--fit-thin); }
+.mood[data-fit="none"] .fit { box-shadow: inset 0 0 0 1.5px var(--fit-none); }
+.mood[data-fit="none"]:not([aria-pressed="true"]) { color: var(--ink-soft); background: transparent; border-style: dashed; }
+.mood[aria-pressed="true"] .fit { box-shadow: 0 0 0 1.5px var(--paper); }
+.mood[aria-pressed="true"][data-fit="none"] .fit { box-shadow: inset 0 0 0 1.5px var(--paper); }
 .mood-line { margin: 0; padding: 8px 16px 0; font-size: 13px; font-style: italic; color: var(--ink-soft); }
+.mood-line .fit-name { font-style: normal; }
 
 .elsewhere { display: flex; align-items: center; gap: 10px; margin: 12px 16px 0; padding: 8px 10px 8px 12px; border: 1px solid var(--rule); border-left: 2px solid var(--accent); font-size: 14px; }
 .elsewhere p { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -144,7 +65,7 @@ main { flex: 1; }
 .body { padding: 14px 16px 16px; }
 .label { font-variant: all-small-caps; letter-spacing: 0.08em; font-size: 13px; color: var(--ink-soft); }
 
-.post { background: var(--sheet); color: var(--post-ink); border: 1px solid var(--rule); padding: 14px 16px; margin: 6px 0 4px; font: var(--post-style) var(--post-weight) 18px/1.4 var(--post-font); text-shadow: var(--post-shadow); white-space: pre-wrap; outline: none; cursor: text; }
+.post { background: var(--sheet); color: var(--post-ink); border: 1px solid var(--rule); padding: 14px 16px; margin: 6px 0 4px; font: 400 18px/1.4 var(--font); white-space: pre-wrap; outline: none; cursor: text; }
 .post:hover { border-color: var(--ink-soft); }
 .post:focus { border-color: var(--ink); }
 .count { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); }
@@ -197,4 +118,15 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
 .lines span:nth-child(3) { width: 94%; animation-delay: 0.4s; }
 .lines span:nth-child(4) { width: 60%; animation-delay: 0.6s; }
 @keyframes read { 0% { background: var(--rule); } 50% { background: var(--accent); } 100% { background: var(--rule); } }
-@media (prefers-reduced-motion: reduce) { .lines span, body { animation: none; transition: none; } }
+/* A stretch: a quiet line above the post. A reach: a card in place of the post,
+   until the author asks to see it. */
+.stretch { margin: 0 0 8px; padding-left: 10px; border-left: 2px solid var(--fit-thin); font-size: 14px; color: var(--ink-soft); }
+.stretch b { font-weight: 600; color: var(--fit-thin-text); }
+.stretch.reach { border-left: 2px dashed var(--fit-none); }
+.stretch.reach b { color: var(--ink); }
+.reach-card { border: 1px dashed var(--fit-none); background: var(--sheet); padding: 16px; }
+.reach-card h2 { margin: 0 0 6px; font-size: 18px; font-weight: 500; line-height: 1.3; }
+.reach-card p { margin: 0; color: var(--ink-soft); }
+.reach-card .actions { margin-top: 14px; }
+
+@media (prefers-reduced-motion: reduce) { .lines span { animation: none; } }

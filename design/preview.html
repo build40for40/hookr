@@ -21,7 +21,7 @@
 <body>
   <header>
     <h1>Hookr panel board</h1>
-    <p>Every frame is the real <code>extension/panel.html</code>, Chrome's side panel for Hookr, running on Kate Marshall's article with sample posts instead of the API. Each frame is as tall as a short side panel; Chrome lets the reader drag it from about 320px to 600px wide. Edit <code>extension/panel.css</code> or <code>panel.js</code> and refresh. The first frame is live: switch moods, try Another hook, edit the post.</p>
+    <p>Every frame is the real <code>extension/panel.html</code>, Chrome's side panel for Hookr, running on Kate Marshall's article with sample posts instead of the API. Each frame is as tall as a short side panel; Chrome lets the reader drag it from about 320px to 600px wide. Edit <code>extension/panel.css</code> or <code>panel.js</code> and refresh. The first frame is live: it opens on Best line, rates every other lens for fit, then try a grey lens to see the reach card.</p>
   </header>
 
   <h2>Live, and every screen</h2>
@@ -30,11 +30,12 @@
   <h2>Side panel widths</h2>
   <div class="grid" id="widths"></div>
 
-  <h2>Every mood</h2>
+  <h2>Every lens on Kate's article</h2>
   <div class="grid" id="moods"></div>
 
   <script type="module">
     import { MOODS } from '../extension/moods.js';
+    import { SAMPLE } from './sample.js';
 
     const frame = (where, caption, src, width) => {
       const figure = document.createElement('figure');
@@ -48,20 +49,28 @@
     };
 
     const panel = '../extension/panel.html';
-    frame('screens', 'Live', `${panel}?mood=elegant`);
-    frame('screens', 'Reading the page', `${panel}?state=reading&mood=elegant`);
-    frame('screens', 'Not word for word: flagged', `${panel}?state=drafted&mood=elegant`);
-    frame('screens', 'Edited past 280', `${panel}?state=over&mood=elegant`);
-    frame('screens', "Couldn't reach the API", `${panel}?state=failed&mood=elegant`);
-    frame('screens', "Can't read this tab", `${panel}?state=blocked&mood=elegant`);
-    frame('screens', 'Moved to another article', `${panel}?state=elsewhere&mood=elegant`);
-    frame('screens', "Moved to a tab it can't read", `${panel}?state=unreadable&mood=elegant`);
-    frame('screens', 'Enter your access code', `${panel}?state=access&mood=elegant`);
-    frame('screens', 'That code didn\'t work', `${panel}?state=access-wrong&mood=elegant`);
-    frame('screens', 'Changing a saved code', `${panel}?state=access-change&mood=elegant`);
-    for (const width of [320, 420, 600]) frame('widths', `${width}px`, `${panel}?state=elsewhere&mood=elegant`, width);
-    for (const width of [320, 420]) frame('widths', `Access code, ${width}px`, `${panel}?state=access-wrong&mood=elegant`, width);
-    for (const { id, name } of MOODS) frame('moods', name, `${panel}?state=result&mood=${id}`);
+    frame('screens', 'Live', `${panel}`);
+    frame('screens', 'Before the lenses are rated', `${panel}?state=unrated`);
+    frame('screens', 'A stretch: Story', `${panel}?state=stretch&mood=story`);
+    frame('screens', 'A reach: Dialogue', `${panel}?state=reach&mood=dialogue`);
+    frame('screens', 'A reach, shown anyway', `${panel}?state=revealed&mood=dialogue`);
+    frame('screens', 'Reading the page', `${panel}?state=reading`);
+    frame('screens', 'Not word for word: flagged', `${panel}?state=drafted`);
+    frame('screens', 'Edited past 280', `${panel}?state=over`);
+    frame('screens', "Couldn't reach the API", `${panel}?state=failed`);
+    frame('screens', "Can't read this tab", `${panel}?state=blocked`);
+    frame('screens', 'Moved to another article', `${panel}?state=elsewhere`);
+    frame('screens', "Moved to a tab it can't read", `${panel}?state=unreadable`);
+    frame('screens', 'Enter your access code', `${panel}?state=access`);
+    frame('screens', 'That code didn\'t work', `${panel}?state=access-wrong`);
+    frame('screens', 'Changing a saved code', `${panel}?state=access-change`);
+    for (const width of [320, 420, 600]) frame('widths', `${width}px`, `${panel}?state=elsewhere`, width);
+    for (const width of [320, 420]) frame('widths', `Access code, ${width}px`, `${panel}?state=access-wrong`, width);
+    const fits = { strong: 'good fit', thin: 'a stretch', none: 'a reach' };
+    for (const { id, name } of MOODS) {
+      const level = SAMPLE.fit[id]?.level;
+      frame('moods', level ? `${name}, ${fits[level]}` : `${name}, her words exactly`, `${panel}?state=${level === 'none' ? 'reach' : 'result'}&mood=${id}`);
+    }
   </script>
 </body>
 </html>

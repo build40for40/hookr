@@ -1,5 +1,5 @@
-import { characters, sourceLabel, wordCount, writePost } from './api.js';
-import { DEFAULT_MOOD, MOODS, moodFor } from './moods.js';
+import { characters, rateFit, sourceLabel, wordCount, writePost } from './api.js';
+import { DEFAULT_MOOD, FITS, better, moodFor, ordered } from './moods.js';
 import { readPage, tabNotice } from './page.js';
 import { clip, trace } from './trace.js';
 
@@ -15,7 +15,10 @@ const windowId = preview ? null : (await chrome.windows.getCurrent()).id;
 const CODE_KEY = 'accessCode';
 
 let page;
-let mood = params.get('mood') ?? remembered() ?? DEFAULT_MOOD;
+let mood = params.get('mood') ?? DEFAULT_MOOD;
+let fit = null;
+let held = null;
+let revealed = true;
 let attempt = 0;
 let original = '';
 let run = 0;
@@ -27,39 +30,72 @@ let before = 'reading';
 const WRONG_CODE = "That code didn't work. Check you copied all of it, or ask the team for a fresh one.";
 const CANT_READ = "Hookr can't read this tab yet. Open an article, like a Substack post, and click the Hookr icon in your toolbar.";
 
-// ---- Moods ----------------------------------------------------------------
+// ---- Lenses ---------------------------------------------------------------
 
-function remembered() {
-  try { return localStorage.getItem('hookr.mood'); } catch { return null; }
-}
+// Every page opens on Best line, her words exactly. The other lenses are rated
+// for fit once the page is read: good fits first, reaches last and quiet.
+const levelOf = id => (id === DEFAULT_MOOD ? null : fit?.[id]?.level in FITS ? fit[id].level : null);
 
 function setMood(id) {
   mood = moodFor(id).id;
-  document.documentElement.dataset.mood = mood;
+  const level = levelOf(mood);
   $('mood-line').textContent = moodFor(mood).line;
+  if (level) {
+    const name = document.createElement('span');
+    name.className = 'fit-name';
+    name.textContent = ` · ${FITS[level].name}`;
+    $('mood-line').append(name);
+  }
   for (const chip of $('moods').children) chip.setAttribute('aria-pressed', String(chip.dataset.mood === mood));
 }
 
-for (const { id, name } of MOODS) {
-  const chip = document.createElement('button');
-  chip.className = 'mood';
-  chip.dataset.mood = id;
-  chip.textContent = name;
-  chip.addEventListener('click', () => {
-    if (id === mood) return;
-    setMood(id);
-    try { localStorage.setItem('hookr.mood', id); } catch {}
-    attempt = 0;
-    if (page) write();
-  });
-  $('moods').append(chip);
+function chips() {
+  $('moods').replaceChildren(...ordered(fit).map(({ id, name }) => {
+    const chip = document.createElement('button');
+    const level = levelOf(id);
+    chip.className = 'mood';
+    chip.dataset.mood = id;
+    if (level) {
+      chip.dataset.fit = level;
+      chip.title = FITS[level].name;
+      const dot = document.createElement('span');
+      dot.className = 'fit';
+      dot.setAttribute('aria-hidden', 'true');
+      chip.append(dot);
+    }
+    chip.append(name);
+    if (level) chip.setAttribute('aria-label', `${name}, ${FITS[level].name.toLowerCase()}`);
+    chip.addEventListener('click', () => pick(id));
+    return chip;
+  }));
+  setMood(mood);
+}
+
+function pick(id) {
+  if (id === mood) return;
+  setMood(id);
+  attempt = 0;
+  if (!page) return;
+  if (levelOf(id) === 'none') reach();
+  else write();
+}
+
+// Fit arrives while Best line is being written. A late answer for a page the
+// author has since left is dropped.
+async function rate() {
+  const asked = page;
+  const got = preview ? await new Promise(resolve => setTimeout(() => resolve(sample.fit), 500)) : await rateFit(page.text, { code });
+  if (page !== asked) return;
+  fit = got;
+  chips();
+  if (screen === 'result') stretch();
 }
 
 // ---- Screens --------------------------------------------------------------
 
 function show(state) {
   screen = state;
-  for (const id of ['reading', 'result', 'failed', 'access']) $(id).hidden = id !== state;
+  for (const id of ['reading', 'reach', 'result', 'failed', 'access']) $(id).hidden = id !== state;
   $('change-code').hidden = !code || !['result', 'failed'].includes(state);
 }
 
@@ -85,9 +121,49 @@ function showPost(post) {
     $('promise').textContent = 'Drafted from your page';
   }
   $('result').dataset.found = String(source.found);
+  stretch();
   count();
   show('result');
 }
+
+// A stretch gets a quiet line above the post; a reach she chose to see keeps
+// its warning. Good fits and Best line say nothing.
+function stretch() {
+  const level = levelOf(mood);
+  const line = $('stretch');
+  line.hidden = level !== 'thin' && level !== 'none';
+  line.classList.toggle('reach', level === 'none');
+  if (line.hidden) return;
+  const [title, note] = level === 'thin'
+    ? ['A bit of a stretch.', 'Worth a polish before you post.']
+    : ['A reach for this page.', 'For ideas, not for posting as-is.'];
+  const strong = document.createElement('b');
+  strong.textContent = title;
+  line.replaceChildren(strong, ` ${note}`);
+}
+
+// A reach: the page has little for this lens. Hookr still writes one, because
+// it might spark an idea, but she has to ask to see it.
+function reach() {
+  const { name } = moodFor(mood);
+  const instead = better(fit);
+  const reason = fit?.[mood]?.reason?.trim() || "There wasn't much on the page to build it from.";
+  $('reach-title').textContent = `${name} is a reach here`;
+  $('reach-reason').textContent = `${reason} We wrote one anyway: worth a look for ideas, not for posting as-is.`;
+  $('reach-better').textContent = `Try ${instead.name}`;
+  $('reach-better').dataset.mood = instead.id;
+  $('reach-better').hidden = instead.id === mood;
+  show('reach');
+  write({ hold: true });
+}
+
+$('reach-better').addEventListener('click', () => pick($('reach-better').dataset.mood));
+$('reach-show').addEventListener('click', () => {
+  revealed = true;
+  if (held === null) show('reading');
+  else if (held instanceof Error) failed(held);
+  else showPost(held);
+});
 
 // The author can edit the post. X counts most characters as one; the Worker
 // keeps its own posts to 280, this keeps the author's edits honest.
@@ -160,19 +236,29 @@ async function hook() {
   return hooks[attempt % hooks.length];
 }
 
-async function write() {
+// `hold` writes behind the reach card and keeps the post until she asks for it.
+async function write({ hold = false } = {}) {
   const mine = ++run;
+  revealed = !hold;
+  held = null;
   if (!code && !preview) return ask();
-  show('reading');
+  if (!hold) show('reading');
   try {
     const post = await hook();
-    if (mine === run) showPost(post);
+    if (mine !== run) return;
+    if (revealed) showPost(post);
+    else held = post;
   } catch (error) {
     if (mine !== run) return;
-    if (error.status !== 401) return fail(error.message);
-    await saveCode(null);
-    ask(WRONG_CODE, true);
+    if (revealed || error.status === 401) failed(error);
+    else held = error;
   }
+}
+
+async function failed(error) {
+  if (error.status !== 401) return fail(error.message);
+  await saveCode(null);
+  ask(WRONG_CODE, true);
 }
 
 $('post').addEventListener('input', count);
@@ -207,6 +293,10 @@ async function start(tabId) {
   describe(page);
   if (!here) return fail(CANT_READ);
   if (!page) return fail('This page has no words to work with. Try it on an article.');
+  fit = null;
+  setMood(DEFAULT_MOOD);
+  chips();
+  rate();
   await write();
 }
 
@@ -243,12 +333,17 @@ function pin(state) {
   $('source').textContent = sourceLabel(page);
   $('words').textContent = `Read ${wordCount(page.text).toLocaleString('en-GB')} words`;
   const hooks = sample.hooks[mood];
+  if (state !== 'unrated') fit = sample.fit;
+  chips();
   if (state === 'reading') show('reading');
+  if (state === 'unrated') showPost(hooks[0]);
+  if (state === 'reach') reach();
+  if (state === 'stretch' || state === 'revealed') showPost(hooks[0]);
   if (state === 'result') showPost(hooks[0]);
   if (state === 'drafted') showPost(sample.drafted);
   if (state === 'over') {
     showPost(hooks[0]);
-    $('post').textContent = `${hooks[0]} ${sample.hooks.calm[0]}`;
+    $('post').textContent = `${hooks[0]} ${sample.hooks.lesson[0]}`;
     count();
   }
   if (state === 'failed') fail("Couldn't write a post just now. Give it another go.");
@@ -274,8 +369,7 @@ function pin(state) {
   }
 }
 
-setMood(mood);
-requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.add('ready')));
+chips();
 if (preview && params.get('state')) pin(params.get('state'));
 else {
   if (!preview) listen();
