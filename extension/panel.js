@@ -69,7 +69,7 @@ function pick(id) {
   setMood(id);
   attempt = 0;
   if (!page) return;
-  if (levelOf(id) === 'none') reach();
+  if (levelOf(id) === 'none') hide();
   else write();
 }
 
@@ -81,14 +81,14 @@ async function rate() {
   if (page !== asked) return;
   fit = got;
   chips();
-  if (screen === 'result') stretch();
+  if (screen === 'result') fitLine();
 }
 
 // ---- Screens --------------------------------------------------------------
 
 function show(state) {
   screen = state;
-  for (const id of ['reading', 'reach', 'result', 'failed', 'access']) $(id).hidden = id !== state;
+  for (const id of ['reading', 'result', 'failed', 'access']) $(id).hidden = id !== state;
   $('change-code').hidden = !code || !['result', 'failed'].includes(state);
 }
 
@@ -114,43 +114,49 @@ function showPost(post) {
     $('promise').textContent = 'Drafted from your page';
   }
   $('result').dataset.found = String(source.found);
-  stretch();
+  fitLine();
+  veil(false);
   count();
   show('result');
 }
 
-// Every fit message says why in plain words: the lens, this piece, and the
-// Worker's one-sentence reason. Good fits and Pull quote say nothing.
+// Every rated lens gets the same line above the post: the fit, then why, from
+// the Worker's reason or the lens's own. Pull quote has no line.
 const why = level => fit?.[mood]?.reason?.trim() || moodFor(mood).reasons?.[level] || '';
 
-// A stretch gets a quiet line above the post; a poor fit she chose to see
-// keeps its warning.
-function stretch() {
+const FIT_LINES = {
+  strong: name => [`This story is a great fit for the ${name} format.`, ''],
+  thin: name => [`This story is a stretch for the ${name} format.`, 'Worth a polish before you post.'],
+  none: name => [`This story isn't a great fit for the ${name} format.`, "We wrote one anyway because it might spark an idea, but we don't recommend posting it as is."],
+};
+
+function fitLine() {
   const level = levelOf(mood);
-  const line = $('stretch');
-  line.hidden = level !== 'thin' && level !== 'none';
-  line.classList.toggle('reach', level === 'none');
-  if (line.hidden) return;
-  const { name } = moodFor(mood);
-  const [title, note] = level === 'thin'
-    ? [`This story is a stretch for the ${name} format.`, 'Worth a polish before you post.']
-    : [`This story isn't a great fit for the ${name} format.`, "We don't recommend posting it as is."];
+  const line = $('fit-line');
+  line.hidden = !level;
+  if (!level) return;
+  line.dataset.fit = level;
+  const [title, note] = FIT_LINES[level](moodFor(mood).name);
   const strong = document.createElement('b');
   strong.textContent = title;
-  line.replaceChildren(strong, ` ${why(level)} ${note}`);
+  line.replaceChildren(strong, ` ${[why(level), note].filter(Boolean).join(' ')}`);
 }
 
-// A reach: the page has little for this lens. Hookr still writes one, because
-// it might spark an idea, but she has to ask to see it.
-function reach() {
-  const { name } = moodFor(mood);
-  $('reach-title').textContent = `This story isn't a great fit for the ${name} format`;
-  $('reach-reason').textContent = `${why('none')} We wrote one anyway because it might spark an idea. But we don't recommend posting it as is.`;
-  show('reach');
+// A poor fit: Hookr still writes one, because it might spark an idea, but the
+// post stays greyed out until she asks to see it.
+function veil(on) {
+  $('veil').hidden = !on;
+  $('shown').hidden = on;
+}
+
+function hide() {
+  fitLine();
+  veil(true);
+  show('result');
   write({ hold: true });
 }
 
-$('reach-show').addEventListener('click', () => {
+$('reveal').addEventListener('click', () => {
   revealed = true;
   if (held === null) show('reading');
   else if (held instanceof Error) failed(held);
@@ -228,7 +234,7 @@ async function hook() {
   return hooks[attempt % hooks.length];
 }
 
-// `hold` writes behind the reach card and keeps the post until she asks for it.
+// `hold` writes behind the greyed-out post and keeps the post until she asks for it.
 async function write({ hold = false } = {}) {
   const mine = ++run;
   revealed = !hold;
@@ -329,7 +335,7 @@ function pin(state) {
   chips();
   if (state === 'reading') show('reading');
   if (state === 'unrated') showPost(hooks[0]);
-  if (state === 'reach') reach();
+  if (state === 'reach') hide();
   if (state === 'stretch' || state === 'revealed') showPost(hooks[0]);
   if (state === 'result') showPost(hooks[0]);
   if (state === 'drafted') showPost(sample.drafted);

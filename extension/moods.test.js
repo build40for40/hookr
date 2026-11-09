@@ -18,9 +18,9 @@ test('the picker puts good fits first and reaches last, Pull quote always first'
   assert.deepEqual(ordered(null).map(({ id }) => id), MOODS.map(({ id }) => id));
 });
 
-test('every lens but Pull quote has a plain why-sentence for a stretch and a poor fit', () => {
+test('every lens but Pull quote has a plain why-sentence for every fit', () => {
   for (const { id, reasons } of MOODS) {
     if (id === DEFAULT_MOOD) { assert.equal(reasons, undefined); continue; }
-    for (const level of ['thin', 'none']) assert.match(reasons?.[level] ?? '', /^[A-Z].*\.$/, `${id} ${level}`);
+    for (const level of ['strong', 'thin', 'none']) assert.match(reasons?.[level] ?? '', /^[A-Z].*\.$/, `${id} ${level}`);
   }
 });
