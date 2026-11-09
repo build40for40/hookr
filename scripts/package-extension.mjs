@@ -1,6 +1,6 @@
-// Builds the Chrome Web Store ZIP into dist/ from an explicit runtime allowlist.
+// Builds the Chrome Web Store and Firefox Add-ons ZIPs into dist/ from an explicit runtime allowlist.
 //
-//   npm run extension:package          store build: live API only, ready to upload
+//   npm run extension:package          store builds: live API only, ready to upload
 //   npm run extension:package -- --dev same files, but keeps localhost for local testing
 //
 // Anything in extension/ that isn't in RUNTIME_FILES, a *.test.js file or a test fixture stops the build.
@@ -12,6 +12,8 @@ import { fileURLToPath } from 'node:url';
 
 export const NAME = 'hookr';
 export const LIVE_API = 'https://hookr-api.40for40.workers.dev';
+export const BROWSERS = ['chrome', 'firefox'];
+export const GECKO_ID = '{3215a658-7a34-48c3-8f21-1fc70abf91a7}';
 export const RUNTIME_FILES = [
   'manifest.json', 'background.js', 'api.js', 'page.js', 'panel.html', 'panel.css', 'panel.js', 'formats.js', 'moods.js', 'trace.js', 'fit.js',
   'vendor/readability/Readability.js', 'vendor/readability/Readability-readerable.js', 'vendor/readability/LICENSE.md',
@@ -28,6 +30,26 @@ export function storeManifest(manifest) {
   const out = structuredClone(manifest);
   out.host_permissions = (out.host_permissions ?? []).filter(origin => !LOCAL_ORIGIN.test(origin));
   delete out.key;
+  return out;
+}
+
+export function firefoxManifest(manifest) {
+  const { minimum_chrome_version, side_panel, background, ...out } = structuredClone(manifest);
+  out.permissions = (out.permissions ?? []).filter(permission => permission !== 'sidePanel');
+  out.background = { scripts: [background.service_worker] };
+  out.sidebar_action = {
+    default_panel: side_panel.default_path,
+    default_title: out.action?.default_title ?? out.name,
+    default_icon: out.action?.default_icon,
+    open_at_install: false,
+  };
+  out.browser_specific_settings = {
+    gecko: {
+      id: GECKO_ID,
+      strict_min_version: '142.0',
+      data_collection_permissions: { required: ['websiteContent'] },
+    },
+  };
   return out;
 }
 
@@ -66,7 +88,8 @@ export function checkManifest(manifest) {
   return problems;
 }
 
-export function buildPackage({ root, dev = false, outDir = join(root, 'dist') }) {
+export function buildPackage({ root, dev = false, browser = 'chrome', outDir = join(root, 'dist') }) {
+  if (!BROWSERS.includes(browser)) throw new Error(`browser must be one of ${BROWSERS.join(', ')}`);
   const source = join(root, 'extension');
 
   const found = [];
@@ -93,6 +116,7 @@ export function buildPackage({ root, dev = false, outDir = join(root, 'dist') })
       throw new Error(`host_permissions has no entry for ${LIVE_API}. Add "${LIVE_API}/*" to extension/manifest.json.`);
     }
   }
+  if (browser === 'firefox') manifest = firefoxManifest(manifest);
 
   const staging = mkdtempSync(join(tmpdir(), `${NAME}-extension-`));
   try {
@@ -105,7 +129,7 @@ export function buildPackage({ root, dev = false, outDir = join(root, 'dist') })
     if (existsSync(join(root, 'LICENSE'))) cpSync(join(root, 'LICENSE'), join(staging, 'LICENSE'));
     const entries = [...RUNTIME_FILES, ...(existsSync(join(staging, 'LICENSE')) ? ['LICENSE'] : [])];
     mkdirSync(outDir, { recursive: true });
-    const zip = join(outDir, `${NAME}-chrome-${manifest.version}${dev ? '-dev' : ''}.zip`);
+    const zip = join(outDir, `${NAME}-${browser}-${manifest.version}${dev ? '-dev' : ''}.zip`);
     rmSync(zip, { force: true });
     execFileSync('zip', ['-X', '-q', zip, ...entries], { cwd: staging });
     return { zip, manifest };
@@ -117,9 +141,13 @@ export function buildPackage({ root, dev = false, outDir = join(root, 'dist') })
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
   const dev = process.argv.includes('--dev');
-  const { zip, manifest } = buildPackage({ root, dev });
-  console.log(zip);
+  let version;
+  for (const browser of BROWSERS) {
+    const { zip, manifest } = buildPackage({ root, dev, browser });
+    console.log(zip);
+    version = manifest.version;
+  }
   console.log(dev
-    ? 'Development build: keeps localhost. Never upload this one.'
-    : `Store build ${manifest.version} against ${LIVE_API}. Run through publishing/README.md before uploading.`);
+    ? 'Development builds: keep localhost. Never upload these.'
+    : `Store builds ${version} against ${LIVE_API}. Run through publishing/README.md before uploading.`);
 }
