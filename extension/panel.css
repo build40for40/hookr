@@ -188,6 +188,8 @@ button:disabled { cursor: not-allowed; opacity: 0.4; box-shadow: none; }
 .fit-line[data-fit="thin"] b { color: var(--fit-thin); }
 .fit-line[data-fit="none"] { border-left: 3px dashed var(--fit-none); }
 .fit-line[data-fit="none"] b { color: var(--smoke); }
+.fit-line[data-fit="party"] { border-left-color: var(--party); }
+.fit-line[data-fit="party"] b { color: var(--party); }
 .veil { background: var(--night); border: 1px dashed var(--fit-none); border-radius: 22px; padding: 20px 18px 18px; }
 .veil-lines span { display: block; height: 12px; border-radius: 6px; background: var(--bruise-hi); margin: 0 0 12px; }
 .veil-lines span:nth-child(2) { width: 92%; }

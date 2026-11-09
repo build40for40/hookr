@@ -213,13 +213,15 @@ function switchOn() {
 const why = level => fit?.[mood]?.reason?.trim() || moodFor(mood).reasons?.[level] || '';
 
 const FIT_LINES = {
+  party: () => ['Every story has a pick-up line in it.', "It's meant to be cheesy, so check it lands before you post."],
   strong: name => [`This story is a great fit for the ${name} angle.`, ''],
   thin: name => [`This story is a stretch for the ${name} angle.`, 'Worth a polish before you post.'],
   none: name => [`This story isn't a great fit for the ${name} angle.`, "We wrote one anyway because it might spark an idea, but we don't recommend posting it as is."],
 };
 
 function fitLine() {
-  const level = levelOf(mood);
+  const party = mood !== DEFAULT_MOOD && moodFor(mood).rated === false;
+  const level = party ? 'party' : levelOf(mood);
   const line = $('fit-line');
   line.hidden = !level;
   if (!level) return;

@@ -11,7 +11,8 @@
 // Pull quote is never rated.
 //
 // `rated: false` is the fun one, Pick-up line: it works on any page, so it is
-// never sent to /fit, always wears a hot pink dot and sits last in the row.
+// never sent to /fit, always wears a hot pink dot and sits last in the row,
+// and its line above the post is `party`, with a pink bar.
 // `loading` replaces the format's loading line while it writes.
 export const MOODS = [
   { id: 'line', name: 'Pull quote', line: 'Your strongest sentence, exactly as you wrote it.' },
@@ -55,7 +56,7 @@ export const MOODS = [
     strong: "Someone speaks on this page, and it's worth leading with.",
     thin: "There's only a line or two of speech to work with.",
     none: "No one speaks on this page." } },
-  { id: 'pickup', name: 'Pick-up line', line: 'Your whole piece as one cheesy line. Use responsibly.',
+  { id: 'pickup', name: 'Pick-up line', line: 'Your story into one slick line. Use responsibly.',
     rated: false, loading: 'Working up the nerve…' },
 ];
 
