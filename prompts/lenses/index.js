@@ -1,14 +1,19 @@
-import elegant from './elegant.js';
-import calm from './calm.js';
-import light from './light.js';
-import serious from './serious.js';
-import dramatic from './dramatic.js';
-import beast from './beast.js';
-import tiktok from './tiktok.js';
+import line from './line.js';
+import story from './story.js';
+import lesson from './lesson.js';
+import take from './take.js';
+import question from './question.js';
+import howto from './howto.js';
+import cliffhanger from './cliffhanger.js';
+import confession from './confession.js';
+import scene from './scene.js';
+import behind from './behind.js';
+import dialogue from './dialogue.js';
 
 // Stable IDs are the API contract; labels and UI styling can change independently.
-export const DEFAULT_LENS = 'elegant';
-export const LENS_PROMPTS = Object.freeze({ elegant, calm, light, serious, dramatic, beast, tiktok });
+// Retired IDs (elegant, calm, light, serious, dramatic, beast, tiktok) fall back to Pull quote.
+export const DEFAULT_LENS = 'line';
+export const LENS_PROMPTS = Object.freeze({ line, story, lesson, take, question, howto, cliffhanger, confession, scene, behind, dialogue });
 
 export function lensFor(id) {
   return typeof id === 'string' && Object.hasOwn(LENS_PROMPTS, id) ? id : DEFAULT_LENS;

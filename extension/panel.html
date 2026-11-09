@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en-GB" data-mood="elegant">
+<html lang="en-GB">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,7 +11,7 @@
     <img src="icons/icon-32.png" alt="">Hookr<span class="source" id="source"></span>
   </header>
 
-  <div class="moods" id="moods" role="group" aria-label="Mood"></div>
+  <div class="moods" id="moods" role="group" aria-label="Lens"></div>
   <p class="mood-line" id="mood-line"></p>
 
   <div class="elsewhere" id="elsewhere" role="status" hidden>
@@ -26,7 +26,19 @@
       <div class="lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     </section>
 
+    <section id="reach" class="body" hidden>
+      <div class="reach-card">
+        <h2 id="reach-title"></h2>
+        <p id="reach-reason"></p>
+        <div class="actions">
+          <button class="primary" id="reach-better"></button>
+          <button class="quiet" id="reach-show">Show me</button>
+        </div>
+      </div>
+    </section>
+
     <section id="result" class="body" hidden>
+      <p class="stretch" id="stretch" hidden></p>
       <span class="label" id="post-label">Your post for X</span>
       <div class="post" id="post" role="textbox" aria-multiline="true" aria-labelledby="post-label" contenteditable="plaintext-only"></div>
       <div class="count" id="count"><span><b id="chars">0</b> / 280<span id="over"></span></span><span id="voice"></span></div>
