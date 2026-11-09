@@ -1,4 +1,4 @@
-import { characters, sourceLabel, wordCount, writePost } from './api.js';
+import { sourceLabel, wordCount, writePost } from './api.js';
 import { readPage } from './page.js';
 
 const $ = id => document.getElementById(id);
@@ -22,9 +22,10 @@ async function read() {
 async function write() {
   show('reading');
   try {
-    const post = await writePost(page.text);
+    const { post, excerpt, length } = await writePost(page.text);
     $('post').textContent = post;
-    $('chars').textContent = characters(post);
+    $('chars').textContent = length;
+    $('excerpt').textContent = excerpt;
     show('result');
   } catch (error) {
     fail(error.message);

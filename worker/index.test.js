@@ -9,11 +9,18 @@ const send = (body, model, env = { MODEL: 'mock:model' }) =>
   handle(new Request('http://api/post', { method: 'POST', body: JSON.stringify(body) }), env, () => model);
 
 test('POST /post turns text into a post, readable from any origin', async () => {
-  const { model } = mockModel('A post.');
+  const { model } = mockModel('Post: A post.\nSupporting excerpt: The article.');
   const response = await send({ text: 'The article.' }, model);
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('Access-Control-Allow-Origin'), '*');
-  assert.deepEqual(await response.json(), { post: 'A post.' });
+  assert.deepEqual(await response.json(), { post: 'A post.', excerpt: 'The article.', length: 7 });
+});
+
+test('POST /post says so when the page has too little to work with', async () => {
+  const { model } = mockModel('There is not enough suitable source material.');
+  const response = await send({ text: 'Home. Subscribe.' }, model);
+  assert.equal(response.status, 422);
+  assert.equal((await response.json()).error.code, 'insufficient_source');
 });
 
 test('POST /post rejects empty or oversized text and a missing MODEL, and reports model failures', async () => {

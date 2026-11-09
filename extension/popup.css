@@ -32,6 +32,9 @@ body {
 .count { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); }
 .count b { font-weight: 500; color: var(--ink); }
 
+.trace { margin-top: 16px; padding-left: 12px; border-left: 2px solid var(--red); font-size: 14px; color: var(--ink-soft); }
+.trace mark { background: none; color: var(--ink); box-shadow: inset 0 -0.45em 0 rgba(138, 42, 34, 0.16); }
+
 .actions { display: flex; gap: 8px; margin-top: 18px; }
 button { font: inherit; font-size: 15px; cursor: pointer; padding: 8px 14px; border-radius: 2px; }
 .primary { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); flex: 1; }

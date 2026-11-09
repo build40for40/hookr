@@ -37,7 +37,9 @@ No build step: after changing extension files, click **Reload** on its card.
 Deployed at https://hookr-api.40for40.workers.dev.
 
 - `GET /health`: `{ "ok": true }`
-- `POST /post` with `{ "text": "..." }`: `{ "post": "..." }`, at most 280 characters. Errors are `{ "error": { "code", "message" } }`.
+- `POST /post` with `{ "text": "..." }`: `{ "post": "...", "excerpt": "...", "length": 0 }`. `post` is at most 280 by X's weighted count (`length`), and `excerpt` is the passage from the article that supports it, checked against the text sent. Errors are `{ "error": { "code", "message" } }`, including 422 `insufficient_source` when the page has too little to work with.
+
+The prompt is [prompts/generate-post-v1.md](prompts/generate-post-v1.md).
 
 The Worker uses the [AI SDK](https://ai-sdk.dev), so the model is one setting: `MODEL`, written `provider:model` (`anthropic`, `openai` or `google`). Nothing is assumed: set `MODEL` and the matching key (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GOOGLE_GENERATIVE_AI_API_KEY`) as Worker secrets, and `/post` answers 503 until `MODEL` is set.
 

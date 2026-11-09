@@ -2,24 +2,54 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createProviderRegistry, generateText } from 'ai';
+import twitter from 'twitter-text';
+import { PROMPT } from './prompt.js';
 
 export const X_LIMIT = 280;
 export const MAX_TEXT = 100_000;
 const ATTEMPTS = 3;
 
-export const INSTRUCTIONS = `You turn an author's writing into one post for X.
-
-You are given the text of a page the author wrote. Find the line most likely to stop someone scrolling and build the post around it.
-
-- Use the author's own words. Don't invent facts or claims.
-- At most ${X_LIMIT} characters.
-- Reply with the post text only: no quotes around it, no hashtags, no preamble.`;
-
-export class TooLongError extends Error {
-  name = 'TooLongError';
+export class InsufficientSourceError extends Error {
+  name = 'InsufficientSourceError';
 }
 
-export const characters = text => [...text].length;
+export class NoValidPostError extends Error {
+  name = 'NoValidPostError';
+}
+
+export const weightedLength = text => twitter.parseTweet(text).weightedLength;
+
+const LABEL = /^[*_\s]*(post|supporting excerpt)[*_\s]*:[*_]*\s*/i;
+
+export function parseReply(text) {
+  const fields = {};
+  let current;
+  for (const line of text.split('\n')) {
+    const label = line.match(LABEL);
+    if (label) {
+      current = label[1].toLowerCase();
+      fields[current] = [line.slice(label[0].length)];
+    } else if (current) {
+      fields[current].push(line);
+    }
+  }
+  const post = fields.post?.join('\n').trim();
+  const excerpt = fields['supporting excerpt']?.join('\n').trim();
+  return post ? { post, excerpt: excerpt ?? '' } : null;
+}
+
+const QUOTES = /^["“”'‘’«»]+|["“”'‘’«»]+$/g;
+const comparable = text => text
+  .normalize('NFC')
+  .replace(/[“”«»]/g, '"')
+  .replace(/[‘’]/g, "'")
+  .replace(/\s+/g, ' ')
+  .trim();
+
+export function excerptInArticle(excerpt, article) {
+  const needle = comparable(excerpt.replace(QUOTES, ''));
+  return needle.length > 0 && comparable(article).includes(needle);
+}
 
 export function modelFor(env) {
   const registry = createProviderRegistry({
@@ -30,13 +60,17 @@ export function modelFor(env) {
   return registry.languageModel(env.MODEL);
 }
 
-export async function writePost(model, text) {
-  let prompt = text;
+export async function writePost(model, article) {
+  const problems = [];
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
-    const result = await generateText({ model, instructions: INSTRUCTIONS, prompt });
-    const post = result.text.trim();
-    if (characters(post) <= X_LIMIT) return post;
-    prompt = `${text}\n\nYour last post was ${characters(post)} characters. Write a shorter one, at most ${X_LIMIT}.`;
+    const { text } = await generateText({ model, instructions: PROMPT, prompt: `ARTICLE DATA\n\n${article}` });
+    const reply = parseReply(text);
+    if (!reply) throw new InsufficientSourceError(text.trim());
+
+    const length = weightedLength(reply.post);
+    if (length > X_LIMIT) problems.push(`post was ${length} weighted characters`);
+    else if (!excerptInArticle(reply.excerpt, article)) problems.push('excerpt was not in the article');
+    else return { post: reply.post, excerpt: reply.excerpt.replace(QUOTES, ''), length };
   }
-  throw new TooLongError(`Couldn't get a post under ${X_LIMIT} characters.`);
+  throw new NoValidPostError(`No valid post after ${ATTEMPTS} tries: ${problems.join('; ')}.`);
 }

@@ -9,10 +9,8 @@ export async function writePost(text, { base = DEFAULT_API, fetcher = fetch } = 
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.error?.message ?? `The server said ${response.status}.`);
-  return body.post;
+  return body;
 }
-
-export const characters = text => [...text].length;
 
 export const wordCount = text => text.split(/\s+/).filter(Boolean).length;
 
