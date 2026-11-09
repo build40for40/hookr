@@ -49,10 +49,10 @@ test('an unlisted file in extension/ stops the build', () => {
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('colocated test files stay out of the store ZIP', () => {
+test('colocated test files and fixtures stay out of the store ZIP', () => {
   const dir = sandbox();
   try {
     const { zip } = buildPackage({ root: dir });
-    assert.doesNotMatch(execFileSync('unzip', ['-Z1', zip], { encoding: 'utf8' }), /\.test\.js/);
+    assert.doesNotMatch(execFileSync('unzip', ['-Z1', zip], { encoding: 'utf8' }), /\.test\.js|fixtures\//);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

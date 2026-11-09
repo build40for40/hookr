@@ -5,15 +5,17 @@ An inventory for writing this app's section of https://build40for40.com/privacy/
 ## What the extension does on the device
 
 - **Permissions:** `activeTab`, `scripting`, `sidePanel`, `storage` and one host permission, the Hookr service. No `tabs`, cookies, history, optional host permissions or always-on content scripts. The background service worker only opens the side panel on a toolbar click; it reads nothing.
-- **Pages read:** only a tab where the user clicked the toolbar button, through Chrome's `activeTab` grant, which ends when that tab leaves the site. It copies the visible text of the article (`extension/page.js`); the title and URL stay in the side panel for its header.
+- **Pages read:** only a tab where the user clicked the toolbar button, through Chrome's `activeTab` grant, which ends when that tab leaves the site. The extension injects its own bundled copy of Mozilla Readability and `readPage` (`extension/page.js`) into that tab, reads the page and any text the user highlighted, and decides on the device whether it's a post. Nothing is fetched from elsewhere to do it.
+- **What's kept from a page:** if the user highlighted 40 characters or more, exactly that text. On X, LinkedIn and Reddit, only the one post on a single post's page, without replies, comments, names of commenters or counts. Elsewhere, the main text Readability extracts, with its title (and Substack subtitle) as the first line. Meta tags and JSON-LD are read only to decide whether it's a post. The title and URL stay in the side panel for its header.
+- **Pages that aren't posts:** feeds, homepages, profiles, search pages and paywalled Substack posts are read on the device and nothing from them is sent. When the extension can't tell, nothing is sent until the author clicks **Hook it anyway**.
 - **Re-reading while the panel is open:** when the author switches tab or the tab loads another page, the panel tries to read the active tab again on the device, to offer "Hook this page". That only works on a tab the user already clicked the button on, and nothing leaves the device until the author asks for a post. The panel listens to Chrome's tab events, which without the `tabs` permission carry no URLs or titles for other tabs.
 - **Stored locally:** nothing while access codes are off. Posts shown in the panel are gone when it closes. (With codes on, the author's access code sits in `chrome.storage.local` until they choose **Forget my code** or the service rejects it, and isn't synced.)
 - **Analytics or tracking code:** none.
 
 ## What it sends to the Hookr service (Cloudflare Worker)
 
-- `POST /fit` with the article text, to rate how well the page suits each lens. Planned; the Worker doesn't answer it yet.
-- `POST /post` with the article text, and the picked lens (one word, such as `story`). No title, URL or cookies.
+- `POST /fit` with the post's text as described above, to rate how well the page suits each lens. Planned; the Worker doesn't answer it yet.
+- `POST /post` with the post's text as described above, and the picked lens (one word, such as `story`). No title, URL or cookies.
 - **Not sent:** browsing history, other tabs, anything typed by the user.
 
 ## Third parties

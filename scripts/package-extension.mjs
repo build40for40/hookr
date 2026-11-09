@@ -3,7 +3,7 @@
 //   npm run extension:package          store build: live API only, ready to upload
 //   npm run extension:package -- --dev same files, but keeps localhost for local testing
 //
-// Anything in extension/ that isn't in RUNTIME_FILES or a *.test.js file stops the build.
+// Anything in extension/ that isn't in RUNTIME_FILES, a *.test.js file or a test fixture stops the build.
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -14,6 +14,7 @@ export const NAME = 'hookr';
 export const LIVE_API = 'https://hookr-api.40for40.workers.dev';
 export const RUNTIME_FILES = [
   'manifest.json', 'background.js', 'api.js', 'page.js', 'panel.html', 'panel.css', 'panel.js', 'formats.js', 'moods.js', 'trace.js', 'fit.js',
+  'vendor/readability/Readability.js', 'vendor/readability/Readability-readerable.js', 'vendor/readability/LICENSE.md',
   'icons/icon-16.png', 'icons/icon-32.png', 'icons/icon-48.png', 'icons/icon-128.png',
   'fonts/inter-400.woff2', 'fonts/inter-500.woff2', 'fonts/inter-600.woff2',
   'fonts/unbounded-600.woff2', 'fonts/unbounded-800.woff2', 'fonts/yellowtail-400.woff2',
@@ -76,7 +77,7 @@ export function buildPackage({ root, dev = false, outDir = join(root, 'dist') })
       lstatSync(path).isDirectory() ? walk(path, rel) : found.push(rel);
     }
   })(source, '');
-  const unexpected = found.filter(rel => !RUNTIME_FILES.includes(rel) && !rel.endsWith('.DS_Store') && !rel.endsWith('.test.js'));
+  const unexpected = found.filter(rel => !RUNTIME_FILES.includes(rel) && !rel.endsWith('.DS_Store') && !rel.endsWith('.test.js') && !rel.startsWith('fixtures/'));
   if (unexpected.length) throw new Error(`Review the runtime allowlist before packaging: ${unexpected.join(', ')}`);
   const missing = RUNTIME_FILES.filter(rel => !existsSync(join(source, rel)));
   if (missing.length) throw new Error(`Missing runtime files: ${missing.join(', ')}`);
