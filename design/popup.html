@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hookr popup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <style>
+    /* The extension popup, as it opens from the toolbar. Chrome caps popups at 800 x 600. */
+    :root {
+      --paper: #f4eee3;
+      --sheet: #fbf8f2;
+      --ink: #1e1b17;
+      --ink-soft: #5b544a;
+      --rule: #d6ccb9;
+      --red: #8a2a22;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #d9d4cb; font: 400 15px/1.5 "Newsreader", Georgia, serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+    .stage { display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; padding: 40px 16px; }
+    .caption { width: 100%; text-align: center; font-size: 13px; color: var(--ink-soft); margin: 0 0 -16px; }
+
+    .popup { width: 360px; background: var(--paper); border: 1px solid var(--rule); box-shadow: 0 10px 30px rgba(30, 27, 23, 0.18); }
+    .bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--rule); font-weight: 500; font-size: 16px; }
+    .bar img { width: 22px; height: 22px; }
+    .bar .source { margin-left: auto; font-weight: 400; font-size: 13px; color: var(--ink-soft); max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .body { padding: 16px; }
+    .label { font-variant: all-small-caps; letter-spacing: 0.08em; font-size: 13px; color: var(--ink-soft); }
+
+    .post { background: var(--sheet); border: 1px solid var(--rule); padding: 14px 16px; margin: 6px 0 4px; font-size: 18px; line-height: 1.4; }
+    .count { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); }
+    .count b { font-weight: 500; color: var(--ink); }
+
+    .trace { margin-top: 16px; padding-left: 12px; border-left: 2px solid var(--red); font-size: 14px; color: var(--ink-soft); }
+    .trace mark { background: none; color: var(--ink); box-shadow: inset 0 -0.45em 0 rgba(138, 42, 34, 0.16); }
+
+    .actions { display: flex; gap: 8px; margin-top: 18px; }
+    button { font: inherit; font-size: 15px; cursor: pointer; padding: 8px 14px; border-radius: 2px; }
+    .primary { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); flex: 1; }
+    .primary:hover { background: var(--red); border-color: var(--red); }
+    .quiet { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+    .quiet:hover { border-color: var(--ink); }
+    .foot { padding: 10px 16px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; }
+
+    /* Reading state: shown while the API finds the hook. */
+    .reading { padding: 40px 24px 44px; text-align: center; }
+    .reading p { margin: 0 0 6px; font-size: 18px; }
+    .reading small { color: var(--ink-soft); font-size: 14px; }
+    .lines { margin: 22px auto 0; width: 200px; }
+    .lines span { display: block; height: 1px; background: var(--rule); margin: 9px 0; transform-origin: left; animation: read 1.6s ease-in-out infinite; }
+    .lines span:nth-child(2) { width: 88%; animation-delay: 0.2s; }
+    .lines span:nth-child(3) { width: 94%; animation-delay: 0.4s; }
+    .lines span:nth-child(4) { width: 60%; animation-delay: 0.6s; }
+    @keyframes read { 0% { background: var(--rule); } 50% { background: var(--red); } 100% { background: var(--rule); } }
+    @media (prefers-reduced-motion: reduce) { .lines span { animation: none; } }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <p class="caption">The Hookr popup, opened from the toolbar on a Substack post. First the result, then the screen while it reads.</p>
+
+    <section class="popup" aria-label="Hookr result">
+      <div class="bar"><img src="icon.svg" alt="">Hookr<span class="source">On writer’s block · Substack</span></div>
+      <div class="body">
+        <span class="label">Your post for X</span>
+        <div class="post">Writer’s block isn’t a shortage of ideas. It’s a surplus of judgement, arriving before the words have had a chance to be wrong.</div>
+        <div class="count"><span><b>127</b> / 280</span><span>Every word is yours</span></div>
+
+        <div class="trace">
+          <span class="label">Found in your page</span><br>
+          …I used to think I had nothing to say. <mark>Writer’s block isn’t a shortage of ideas. It’s a surplus of judgement…</mark>
+        </div>
+
+        <div class="actions">
+          <button class="primary">Copy for X</button>
+          <button class="quiet">Another hook</button>
+        </div>
+      </div>
+      <div class="foot"><span>Read 1,840 words</span><span>Nothing invented</span></div>
+    </section>
+
+    <section class="popup" aria-label="Hookr reading the page">
+      <div class="bar"><img src="icon.svg" alt="">Hookr<span class="source">On writer’s block · Substack</span></div>
+      <div class="reading">
+        <p>Reading your page…</p>
+        <small>Looking for the line worth posting.</small>
+        <div class="lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="foot"><span>1,840 words</span><span>Usually a few seconds</span></div>
+    </section>
+  </div>
+</body>
+</html>
