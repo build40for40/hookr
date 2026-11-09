@@ -1,6 +1,6 @@
 # Publishing the extension
 
-How Hookr goes from `extension/` to something people install. Chrome comes first; Firefox Add-ons is on the publishing card too and isn't covered here yet.
+How Hookr goes from `extension/` to something people install. Chrome comes first; Firefox Add-ons is on the publishing card too, and so far only the package is ready (submitting isn't covered here yet).
 
 | File | What it's for |
 | --- | --- |
@@ -12,8 +12,8 @@ How Hookr goes from `extension/` to something people install. Chrome comes first
 ## Build the package
 
 ```sh
-npm run extension:package        # dist/hookr-chrome-<version>.zip, the one you upload
-npm run extension:package:dev    # dist/hookr-chrome-<version>-dev.zip, keeps localhost, never upload
+npm run extension:package        # dist/hookr-chrome-<version>.zip and hookr-firefox-<version>.zip, the ones you upload
+npm run extension:package:dev    # the same with -dev, keeps localhost, never upload
 ```
 
 The store build differs from `extension/` in two ways, so whoever installs it gets a working extension with nothing to set up:
@@ -33,7 +33,8 @@ unzip -p dist/hookr-chrome-0.1.0.zip manifest.json
 ## Distribution route
 
 - **Chrome Web Store, public or unlisted**, under the 40 for 40 Ltd developer account (fee already paid). One click to install and automatic updates. Unlisted keeps it out of search for hand-picked users. Review took longer than a day on Day 3, so it won't be live on the day we submit.
-- **Same-day fallback: a direct download.** Send the store ZIP with these steps: unzip it somewhere permanent, open `chrome://extensions`, turn on Developer mode, **Load unpacked**, choose the folder. Chrome shows a developer-mode banner and every update means a new ZIP.
+- **Same-day fallback: a direct download.** CI publishes both ZIPs as GitHub releases after every merge to `main`, with the install steps from `../.github/release-notes.md`. Point people at https://github.com/build40for40/hookr/releases/latest, or straight at `releases/latest/download/hookr-chrome.zip`. Chrome shows a developer-mode banner and every update means a new ZIP. Firefox keeps an unsigned ZIP only until it restarts, so Firefox users really need the add-on signed on Firefox Add-ons.
+- **GitHub releases:** bumping `version` in `extension/manifest.json` and merging makes a `v<version>` release, marked latest. Every merge also replaces the `edge` prerelease with the newest build from `main`, at whatever version the manifest says.
 
 ## Submit to the Chrome Web Store
 

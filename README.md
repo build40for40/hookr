@@ -42,7 +42,7 @@ To check the panel's look without Chrome or the API, serve the repo (`python3 -m
 | `npm run check` | Tests plus a Wrangler deploy dry run (what CI runs) |
 | `npm run deploy` | Deploys the `hookr-api` Worker by hand. CI does this on every push to `main` |
 | `npm run access-code -- <name>` | Prints a fresh access code and its `name:code` pair |
-| `npm run extension:package` | Store ZIP in `dist/`, pointed at the live API |
+| `npm run extension:package` | Chrome and Firefox store ZIPs in `dist/`, pointed at the live API |
 | `npm run extension:package:dev` | Same files, keeps localhost. Never upload it |
 | `node scripts/vendor-readability.mjs` | Copies the pinned `@mozilla/readability` into `extension/vendor/` after a version bump |
 

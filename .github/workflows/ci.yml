@@ -32,8 +32,16 @@ jobs:
 
       - run: npm run extension:package
 
-      - name: List store package
-        run: unzip -l dist/hookr-chrome-*.zip
+      - name: List store packages
+        run: |
+          unzip -l dist/hookr-chrome-*.zip
+          unzip -l dist/hookr-firefox-*.zip
+
+      - name: Lint the Firefox package
+        run: |
+          mkdir -p "$RUNNER_TEMP/firefox"
+          unzip -q dist/hookr-firefox-*.zip -d "$RUNNER_TEMP/firefox"
+          npx --yes web-ext@10.8.0 lint --source-dir "$RUNNER_TEMP/firefox"
 
       - name: Validate manifest
         run: |
@@ -74,3 +82,56 @@ jobs:
       - name: Skip deploy
         if: env.CLOUDFLARE_API_TOKEN == ''
         run: echo "::notice::Deploy skipped because the CLOUDFLARE_API_TOKEN secret isn't set."
+
+  release:
+    name: Publish the extension
+    needs: deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run extension:package
+
+      # Fixed asset names keep releases/latest/download/hookr-chrome.zip a stable link.
+      - name: Name the packages
+        run: |
+          version=$(jq -r .version extension/manifest.json)
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          mkdir release
+          cp "dist/hookr-chrome-$version.zip" release/hookr-chrome.zip
+          cp "dist/hookr-firefox-$version.zip" release/hookr-firefox.zip
+
+      - name: Replace the edge build
+        run: |
+          if gh release view edge > /dev/null 2>&1; then gh release delete edge --cleanup-tag --yes; fi
+          {
+            echo "The newest build from \`main\` ($GITHUB_SHA), replaced on every merge. Version $VERSION. For a numbered release, use the [latest release](https://github.com/$GH_REPO/releases/latest)."
+            echo
+            cat .github/release-notes.md
+          } > "$RUNNER_TEMP/edge-notes.md"
+          gh release create edge release/*.zip --target "$GITHUB_SHA" --prerelease --latest=false \
+            --title "Edge build from main" --notes-file "$RUNNER_TEMP/edge-notes.md"
+
+      - name: Release a new version
+        run: |
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "::notice::v$VERSION is already released. Bump version in extension/manifest.json to release again."
+          else
+            gh release create "v$VERSION" release/*.zip --target "$GITHUB_SHA" --latest \
+              --title "Hookr $VERSION" --notes-file .github/release-notes.md --generate-notes
+          fi

@@ -5,7 +5,7 @@ import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildPackage, checkManifest, LIVE_API, RUNTIME_FILES } from './package-extension.mjs';
+import { buildPackage, checkManifest, GECKO_ID, LIVE_API, RUNTIME_FILES } from './package-extension.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const read = (zip, file) => execFileSync('unzip', ['-p', zip, file], { encoding: 'utf8' });
@@ -27,6 +27,24 @@ test('the store ZIP holds exactly the allowlist, points at the live API and drop
     assert.deepEqual(execFileSync('unzip', ['-Z1', zip], { encoding: 'utf8' }).trim().split('\n').sort(), [...RUNTIME_FILES].sort());
     assert.deepEqual(JSON.parse(read(zip, 'manifest.json')).host_permissions, [`${LIVE_API}/*`]);
     assert.match(read(zip, 'api.js'), new RegExp(`DEFAULT_API = '${LIVE_API}'`));
+    assert.doesNotMatch(read(zip, 'api.js'), /localhost/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('the Firefox ZIP swaps the side panel for a sidebar and carries its add-on ID', () => {
+  const dir = sandbox();
+  try {
+    const { zip } = buildPackage({ root: dir, browser: 'firefox' });
+    assert.match(zip, /hookr-firefox-[\d.]+\.zip$/);
+    assert.deepEqual(execFileSync('unzip', ['-Z1', zip], { encoding: 'utf8' }).trim().split('\n').sort(), [...RUNTIME_FILES].sort());
+    const manifest = JSON.parse(read(zip, 'manifest.json'));
+    assert.deepEqual(manifest.background, { scripts: ['background.js'] });
+    assert.equal(manifest.sidebar_action.default_panel, 'panel.html');
+    assert.equal(manifest.side_panel, undefined);
+    assert.equal(manifest.minimum_chrome_version, undefined);
+    assert.deepEqual(manifest.permissions, ['activeTab', 'scripting', 'storage']);
+    assert.equal(manifest.browser_specific_settings.gecko.id, GECKO_ID);
+    assert.deepEqual(manifest.host_permissions, [`${LIVE_API}/*`]);
     assert.doesNotMatch(read(zip, 'api.js'), /localhost/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
