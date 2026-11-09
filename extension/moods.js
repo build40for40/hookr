@@ -9,6 +9,11 @@
 // `reasons` are the fallback why-sentences when /fit gives no reason of its
 // own: `strong` for a good fit, `thin` for a stretch, `none` for a poor fit.
 // Pull quote is never rated.
+//
+// `rated: false` is the fun one, Pick-up line: it works on any page, so it is
+// never sent to /fit, always wears a hot pink dot and sits last in the row,
+// and its line above the post is `party`, with a pink bar.
+// `loading` replaces the format's loading line while it writes.
 export const MOODS = [
   { id: 'line', name: 'Pull quote', line: 'Your strongest sentence, exactly as you wrote it.' },
   { id: 'story', name: 'Story', line: 'Drops the reader into a moment, then the turn.', reasons: {
@@ -51,9 +56,14 @@ export const MOODS = [
     strong: "Someone speaks on this page, and it's worth leading with.",
     thin: "There's only a line or two of speech to work with.",
     none: "No one speaks on this page." } },
+  { id: 'pickup', name: 'Pick-up line', line: 'Your story into one slick line. Use responsibly.',
+    rated: false, loading: 'Working up the nerve…' },
 ];
 
 export const DEFAULT_MOOD = 'line';
+
+// The lenses /fit rates: everything but Pull quote and the unrated fun ones.
+export const RATED_IDS = MOODS.filter(({ id, rated }) => id !== DEFAULT_MOOD && rated !== false).map(({ id }) => id);
 
 export const moodFor = id => MOODS.find(mood => mood.id === id) ?? MOODS[0];
 
@@ -65,10 +75,11 @@ export const FITS = {
   none:   { rank: 2, name: 'Not a great fit for this piece' },
 };
 
-// Rated lenses in picker order: Pull quote first, then good fits, stretches and
-// reaches, keeping the list's own order within each. Unrated lenses keep their place.
+// Picker order: Pull quote first, then good fits, stretches and reaches, keeping
+// the list's own order within each, and Pick-up line last. Lenses not yet rated
+// keep their place.
 export function ordered(fit) {
-  const rank = ({ id }) => (id === DEFAULT_MOOD ? -1 : FITS[fit?.[id]?.level]?.rank ?? 0);
+  const rank = ({ id, rated }) => (id === DEFAULT_MOOD ? -1 : rated === false ? 9 : FITS[fit?.[id]?.level]?.rank ?? 0);
   return MOODS.map((mood, index) => ({ mood, index }))
     .sort((a, b) => rank(a.mood) - rank(b.mood) || a.index - b.index)
     .map(({ mood }) => mood);

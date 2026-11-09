@@ -4,11 +4,11 @@ import { rateFit as frontendRateFit } from '../extension/api.js';
 import { handle } from './index.js';
 import { mockModel } from './mock-model.js';
 import { MAX_TEXT } from './post.js';
-import { LENSES, DEFAULT_LENS } from '../prompts/lenses/index.js';
+import { LENSES, DEFAULT_LENS, ratedIds } from '../prompts/lenses/index.js';
 import { parseFit, rateFit, fitInstructions, InvalidFitError } from './fit.js';
 import { evaluateOutput } from '../evals/global/index.js';
 const article = 'First remove unrelated files. Then use read-only access.';
-const payload = () => ({ fit: Object.fromEntries(Object.keys(LENSES).filter(id => id !== DEFAULT_LENS).map(id => [id, {
+const payload = () => ({ fit: Object.fromEntries(ratedIds().map(id => [id, {
   level: 'none', reason: 'This page does not contain the material for this lens.', evidence: [],
 }])) });
 const env = { MODEL: 'mock:model', ACCESS_CODES: 'tester:test-code' };
@@ -37,7 +37,8 @@ test('/fit returns complete current IDs, hides internal evidence and records no 
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.deepEqual(body.fit.howto, { level: 'strong', reason: rated.fit.howto.reason });
-  assert.equal(Object.keys(body.fit).length, Object.keys(LENSES).length - 1);
+  assert.equal(Object.keys(body.fit).length, ratedIds().length);
+  assert.ok(!Object.hasOwn(body.fit, 'pickup'));
   assert.ok(!Object.hasOwn(body.fit, DEFAULT_LENS));
   assert.equal(prompts.length, 1);
   assert.deepEqual(log.mock.calls.map(call => call.arguments), [[{ event: 'fit' }]]);

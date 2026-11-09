@@ -1,12 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluateOutput, validateTrendSignals, CRITERIA } from './index.js';
-import { LENSES, DEFAULT_LENS } from '../../prompts/lenses/index.js';
+import { LENSES, DEFAULT_LENS, ratedIds } from '../../prompts/lenses/index.js';
 
 const article = 'Start small. One read-only folder may help you review mistakes.';
 const base = { article, output: { post: 'Start small.', excerpt: 'Start small.' } };
 const result = (args = {}) => evaluateOutput({ ...base, ...args });
-const assessment = (level = 'strong') => ({ article, response: { fit: Object.fromEntries(Object.keys(LENSES).filter(id => id !== DEFAULT_LENS).map(id => [id, { level, reason: 'The page supports this lens.' }])) } });
+const assessment = (level = 'strong') => ({ article, response: { fit: Object.fromEntries(ratedIds().map(id => [id, { level, reason: 'The page supports this lens.' }])) } });
 const completeJudgments = () => {
   const judgments = Object.fromEntries(CRITERIA.map(id => [id, { score: 1, reason: 'Reviewed against source and rubric', reviewer: 'human:Samira' }]));
   judgments.source_fidelity.claims = [{ claim: 'Start small.', quote: 'Start small.' }];

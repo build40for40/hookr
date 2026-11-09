@@ -30,6 +30,7 @@
   --fit-strong: #57d68d;
   --fit-thin: #ffc857;
   --fit-none: #8a7c92;
+  --party: #ff69b4;
   --glow-small: 0 0 6px var(--cherry), 0 0 18px var(--cherry);
   --glow-button: 0 0 24px rgba(255, 45, 122, 0.7);
   --ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -88,6 +89,7 @@ body {
 .mood[data-fit="strong"] .fit { background: var(--fit-strong); }
 .mood[data-fit="thin"] .fit { background: linear-gradient(90deg, var(--fit-thin) 50%, transparent 50%); box-shadow: inset 0 0 0 1.5px var(--fit-thin); }
 .mood[data-fit="none"] .fit { box-shadow: inset 0 0 0 1.5px var(--fit-none); }
+.mood[data-fit="party"] .fit { background: var(--party); }
 .mood[data-fit="none"]:not([aria-pressed="true"]) { color: var(--meta); background: transparent; border-style: dashed; }
 .mood[aria-pressed="true"] .fit { box-shadow: 0 0 0 1.5px var(--cherry-ink); }
 .mood[aria-pressed="true"][data-fit="none"] .fit { box-shadow: inset 0 0 0 1.5px var(--cherry-ink); }
@@ -186,6 +188,8 @@ button:disabled { cursor: not-allowed; opacity: 0.4; box-shadow: none; }
 .fit-line[data-fit="thin"] b { color: var(--fit-thin); }
 .fit-line[data-fit="none"] { border-left: 3px dashed var(--fit-none); }
 .fit-line[data-fit="none"] b { color: var(--smoke); }
+.fit-line[data-fit="party"] { border-left-color: var(--party); }
+.fit-line[data-fit="party"] b { color: var(--party); }
 .veil { background: var(--night); border: 1px dashed var(--fit-none); border-radius: 22px; padding: 20px 18px 18px; }
 .veil-lines span { display: block; height: 12px; border-radius: 6px; background: var(--bruise-hi); margin: 0 0 12px; }
 .veil-lines span:nth-child(2) { width: 92%; }

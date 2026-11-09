@@ -19,6 +19,7 @@ A lens is a kind of post (a copywriting style), not a tone or a platform, and wo
 | scene | Scene | One vivid detail from the page, no point made |
 | behind | Behind the page | Why or how the author wrote it, if they say |
 | dialogue | Dialogue | Speech quoted exactly from the page |
+| pickup | Pick-up line | One cheesy, flirty line built on the article; never crude. Never rated for fit (`rated: false`) |
 
 The retired moods (elegant, calm, light, serious, dramatic, beast, tiktok) fall back to `line`.
 
