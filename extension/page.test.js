@@ -81,6 +81,12 @@ const cases = [
     text: 'Read every chapter aloud before it leaves your desk. If you trip over a sentence, so will your reader.',
   },
   {
+    name: "a reply page in X's layout without test ids reads the reply",
+    fixture: 'x-reply-signed-out', url: 'https://x.com/adaquill/status/4444444444',
+    verdict: 'post', source: 'x',
+    text: 'Read every chapter aloud before it leaves your desk. If you trip over a sentence, so will your reader.',
+  },
+  {
     name: 'the X home feed is not a post',
     fixture: 'x-home', url: 'https://x.com/home',
     verdict: 'not_post', source: 'x', text: '',

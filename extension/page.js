@@ -71,7 +71,9 @@ export function readPage(win = window) {
     const links = article => [...article.querySelectorAll('a[href]')].map(a => new URL(a.getAttribute('href'), url).pathname);
     const tweet = [...doc.querySelectorAll('article')].find(article => links(article).some(href => permalink.test(href)));
     const quoted = el => el.closest('[role="link"]') && tweet.contains(el.closest('[role="link"]'));
-    const body = tweet && [...tweet.querySelectorAll('[data-testid="tweetText"]')].find(el => !quoted(el));
+    // X's layout without test ids, seen signed out in November 2026.
+    const layout = tweet?.querySelector('[data-testid]') ? '[data-testid="tweetText"]' : '[dir="auto"]';
+    const body = tweet && [...tweet.querySelectorAll(layout)].find(el => !quoted(el));
     const text = textOf(body);
     if (!text) return result('not_post', 'x', {}, ['post not found']);
     return result('post', 'x', { text }, [`post ${id}`]);
