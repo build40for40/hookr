@@ -6,6 +6,7 @@ import { mockModel } from './mock-model.js';
 import { MAX_TEXT } from './post.js';
 import { LENSES, DEFAULT_LENS } from '../prompts/lenses/index.js';
 import { parseFit, rateFit, fitInstructions, InvalidFitError } from './fit.js';
+import { evaluateOutput } from '../evals/global/index.js';
 const article = 'First remove unrelated files. Then use read-only access.';
 const payload = () => ({ fit: Object.fromEntries(Object.keys(LENSES).filter(id => id !== DEFAULT_LENS).map(id => [id, {
   level: 'none', reason: 'This page does not contain the material for this lens.', evidence: [],
@@ -76,4 +77,22 @@ test('provider errors make the existing frontend leave lenses unrated, with no r
   assert.equal(await frontendRateFit(article, { code: 'test-code', base: 'http://api', fetcher }), null);
   assert.equal(calls, 1);
   assert.deepEqual(logged.mock.calls.map(call => call.arguments), [['rateFit failed']]);
+});
+
+test('one Worker fit response feeds both frontend indicators and the output evaluation', async t => {
+  t.mock.method(console, 'log', () => {});
+  const rated = payload();
+  rated.fit.howto = { level: 'thin', reason: 'There are only two short steps here.', evidence: ['First remove unrelated files.'] };
+  const { model, prompts } = mockModel(JSON.stringify(rated));
+  let response;
+  const fetcher = async (url, init) => {
+    const http = await handle(new Request(url, init), env, () => model);
+    response = await http.clone().json();
+    return http;
+  };
+  const uiFit = await frontendRateFit(article, { code: 'test-code', base: 'http://api', fetcher });
+  const report = evaluateOutput({ article, lens: 'howto', output: { post: article, excerpt: article }, fitAssessment: { article, response } });
+  assert.deepEqual(report.sourceFit, { status: 'assessed', ...uiFit.howto });
+  assert.equal(report.readiness, 'needs_review');
+  assert.equal(prompts.length, 1);
 });

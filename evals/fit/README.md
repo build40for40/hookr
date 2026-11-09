@@ -1,5 +1,7 @@
 # Lens suitability evaluation
 
+The same saved `/fit` response also feeds `evals/global/`: pass `fitAssessment: { article: exactInputSnapshot, response: savedWorkerResponse }`. Its `sourceFit` field matches the frontend indicator, while `lens_fit` remains a distinct output-adherence judgment. Source suitability is not rerated by the output judge. Shared validation lives in `extension/fit.js`; incomplete, unknown or malformed ratings stay unassessed in the UI/output report. Use `evaluateFit` below to compare that one response with human reference labels, not to create a second product rating.
+
 `POST /fit` answers whether this article contains material for each lens. It does not grade the writing or approve generated outputs. `strong` means clear supporting material, `thin` some material but a stretch, and `none` absent required material. Every current registry lens except the default Pull quote is assessed; no count or list is duplicated in the route. Exact style instructions come from the shared registry. Source-specific reasons must describe material, never insult the author.
 
 The frontend mapping remains Lawrence's design: strong is a green solid dot, thin a yellow half dot, none a grey ring and reach card. No red state is introduced. The UI already calls this endpoint after reading each page, alongside generating Pull quote. A missing/failed assessment leaves the lenses unrated. Deploying this branch is required before production can use the route.
