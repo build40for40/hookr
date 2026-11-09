@@ -53,7 +53,7 @@ The API is for the team and Kate while we test, so `POST /post` needs a personal
 - `secret put` replaces the whole value and takes effect within seconds, with no code change or CI run. Wrangler can't show a secret's value, so the list in the password manager is the only copy.
 - **Locally:** put a pair in `ACCESS_CODES` in `.dev.vars`. With it unset, `POST /post` answers 503 `not_configured`.
 
-The base prompt is [prompts/generate-post-v1.md](prompts/generate-post-v1.md). Each lens (sent as `mood`) selects a separate [lens sub-prompt](prompts/lenses/README.md), composed with the base by `worker/lenses.js`. `mood` is optional; missing or unknown IDs use Best line. The reply format is unchanged.
+The base prompt is [prompts/generate-post-v1.md](prompts/generate-post-v1.md). Each lens (sent as `mood`) selects a separate [lens sub-prompt](prompts/lenses/README.md), composed with the base by `worker/lenses.js`. `mood` is optional; missing or unknown IDs use Pull quote. The reply format is unchanged.
 
 The Worker uses the [AI SDK](https://ai-sdk.dev), so the model is one setting: `MODEL` in `wrangler.jsonc`, written `provider:model` (`anthropic`, `openai` or `google`). It's `anthropic:claude-sonnet-5-5`. CI copies the org's `ANTHROPIC_API_KEY` secret into the Worker on every deploy; switching provider means adding its key (`OPENAI_API_KEY` or `GOOGLE_GENERATIVE_AI_API_KEY`) to the deploy step's `secrets` in `.github/workflows/ci.yml`.
 

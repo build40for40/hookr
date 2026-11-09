@@ -2,7 +2,7 @@
 // the API (design/preview.html). Only the paragraphs the samples quote are here.
 // https://katebmarshall.substack.com/p/before-you-turn-on-your-ai-agentdo
 //
-// Best line is her words, copied exactly. The other lenses are sample drafts in
+// Pull quote is her words, copied exactly. The other lenses are sample drafts in
 // the style each lens asks for, built only from what's on her page. `fit` is how
 // the Worker might rate this article for each lens. `drafted` is kept for the
 // flagged screen.
@@ -62,14 +62,14 @@ export const SAMPLE = {
   },
   fit: {
     story: { level: 'thin', reason: 'There’s one moment, the drive full of tax returns, but it isn’t told as a story.' },
-    lesson: { level: 'strong', reason: 'She says what she does and why.' },
-    take: { level: 'strong', reason: 'She argues the usual question, which bot, is the wrong one.' },
+    lesson: { level: 'strong', reason: 'You say what you do, and why.' },
+    take: { level: 'strong', reason: 'You argue the usual question, which bot to choose, is the wrong one.' },
     question: { level: 'strong', reason: 'The piece answers a question readers already have.' },
-    howto: { level: 'strong', reason: 'Seven numbered steps.' },
-    cliffhanger: { level: 'strong', reason: 'A clear setup with the steps as the payoff.' },
-    confession: { level: 'thin', reason: 'Only one small personal admission.' },
-    scene: { level: 'thin', reason: 'The drive is the only vivid image.' },
-    behind: { level: 'none', reason: 'She doesn’t say why she wrote this, or how.' },
+    howto: { level: 'strong', reason: 'There are seven numbered steps here to work from.' },
+    cliffhanger: { level: 'strong', reason: 'There’s a clear setup, with the steps as the payoff.' },
+    confession: { level: 'thin', reason: 'There’s only one small personal admission here.' },
+    scene: { level: 'thin', reason: 'The drive full of tax returns is the only vivid image here.' },
+    behind: { level: 'none', reason: 'This page doesn’t say why or how you wrote it.' },
     dialogue: { level: 'none', reason: 'No one speaks on this page.' },
   },
   drafted: 'Giving an AI agent your inbox means giving it the password reset links for your other accounts. Start with your calendar or one folder instead.',

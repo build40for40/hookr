@@ -33,33 +33,30 @@
       <div class="lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     </section>
 
-    <section id="reach" class="body" hidden>
-      <div class="reach-card">
-        <h2 id="reach-title"></h2>
-        <p id="reach-reason"></p>
-        <div class="actions">
-          <button class="primary" id="reach-better"></button>
-          <button class="quiet" id="reach-show">Show me</button>
-        </div>
-      </div>
-    </section>
-
     <section id="result" class="body" hidden>
-      <p class="stretch" id="stretch" hidden></p>
-      <div class="card" id="card">
-        <div class="card-head"><span class="label" id="post-label"></span><span class="count" id="count"></span></div>
-        <div class="post" id="post" role="textbox" aria-multiline="true" aria-labelledby="post-label" contenteditable="plaintext-only"></div>
-        <ol class="thread" id="thread" aria-labelledby="post-label" hidden></ol>
-        <div class="trace" id="trace">
-          <span class="trace-label" id="trace-label"></span>
-          <mark id="excerpt"></mark> <span class="where" id="where"></span>
-        </div>
-      </div>
-      <p class="voice" id="voice"></p>
+      <p class="fit-line" id="fit-line" hidden></p>
 
-      <div class="actions">
-        <button class="primary" id="copy">Copy for X</button>
-        <button class="quiet" id="again">Try another angle</button>
+      <div class="veil" id="veil" hidden>
+        <div class="veil-lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <button class="quiet" id="reveal">I know the risks, show me anyway</button>
+      </div>
+
+      <div id="shown">
+        <div class="card" id="card">
+          <div class="card-head"><span class="label" id="post-label"></span><span class="count" id="count"></span></div>
+          <div class="post" id="post" role="textbox" aria-multiline="true" aria-labelledby="post-label" contenteditable="plaintext-only"></div>
+          <ol class="thread" id="thread" aria-labelledby="post-label" hidden></ol>
+          <div class="trace" id="trace">
+            <span class="trace-label" id="trace-label"></span>
+            <mark id="excerpt"></mark> <span class="where" id="where"></span>
+          </div>
+        </div>
+        <p class="voice" id="voice"></p>
+
+        <div class="actions">
+          <button class="primary" id="copy">Copy for X</button>
+          <button class="quiet" id="again">Try another angle</button>
+        </div>
       </div>
     </section>
 

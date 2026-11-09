@@ -1,15 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_MOOD, MOODS, better, moodFor, ordered } from './moods.js';
+import { DEFAULT_MOOD, MOODS, moodFor, ordered } from './moods.js';
 
-test('Best line is the default and unknown or retired IDs fall back to it', () => {
+test('Pull quote is the default and unknown or retired IDs fall back to it', () => {
   assert.equal(DEFAULT_MOOD, 'line');
   assert.equal(MOODS[0].id, 'line');
   for (const id of ['elegant', 'tiktok', undefined]) assert.equal(moodFor(id).id, 'line');
   assert.equal(new Set(MOODS.map(({ id }) => id)).size, MOODS.length);
 });
 
-test('the picker puts good fits first and reaches last, Best line always first', () => {
+test('the picker puts good fits first and reaches last, Pull quote always first', () => {
   const fit = { story: { level: 'none' }, dialogue: { level: 'strong' }, lesson: { level: 'thin' } };
   const ids = ordered(fit).map(({ id }) => id);
   assert.equal(ids[0], 'line');
@@ -18,8 +18,9 @@ test('the picker puts good fits first and reaches last, Best line always first',
   assert.deepEqual(ordered(null).map(({ id }) => id), MOODS.map(({ id }) => id));
 });
 
-test('a reach offers the first good fit, else a stretch, else Best line', () => {
-  assert.equal(better({ story: { level: 'thin' }, take: { level: 'strong' }, dialogue: { level: 'none' } }).id, 'take');
-  assert.equal(better({ story: { level: 'thin' }, dialogue: { level: 'none' } }).id, 'story');
-  assert.equal(better(null).id, 'line');
+test('every lens but Pull quote has a plain why-sentence for every fit', () => {
+  for (const { id, reasons } of MOODS) {
+    if (id === DEFAULT_MOOD) { assert.equal(reasons, undefined); continue; }
+    for (const level of ['strong', 'thin', 'none']) assert.match(reasons?.[level] ?? '', /^[A-Z].*\.$/, `${id} ${level}`);
+  }
 });
