@@ -1,4 +1,4 @@
-import { MAX_TEXT, modelFor, writePost } from './post.js';
+import { InsufficientSourceError, MAX_TEXT, modelFor, NoValidPostError, writePost } from './post.js';
 
 // CORS allows any origin: requests never carry cookies.
 const headers = {
@@ -20,9 +20,15 @@ async function post(request, env, model) {
   if (!env.MODEL) return error('not_configured', 'No model is set on the server.', 503);
 
   try {
-    return json({ post: await writePost(model(), text) });
+    return json(await writePost(model(), text));
   } catch (cause) {
+    if (cause instanceof InsufficientSourceError) {
+      return error('insufficient_source', "There isn't enough in this page to write a post from.", 422);
+    }
     console.error('writePost failed', cause);
+    if (cause instanceof NoValidPostError) {
+      return error('no_valid_post', "Couldn't write a post that fits and quotes the page. Give it another go.", 502);
+    }
     return error('upstream', "Couldn't write a post just now. Give it another go.", 502);
   }
 }
