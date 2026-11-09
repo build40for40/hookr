@@ -74,9 +74,9 @@
     // frame('screens', 'That code didn\'t work', `${panel}?state=access-wrong`);
     // frame('screens', 'Changing a saved code', `${panel}?state=access-change`);
     for (const format of FORMATS) {
-      for (const platform of format.platforms) frame('formats', `${format.name} for ${platform.name}`, `${panel}?state=result&format=${format.id}&platform=${platform.id}`);
+      for (const platform of format.platforms) frame('formats', `${format.name}, ${platform.name}`, `${panel}?state=result&format=${format.id}&platform=${platform.id}`);
     }
-    frame('formats', 'Pearls, one post edited past 280', `${panel}?state=thread-over&format=thread&platform=x`);
+    frame('formats', 'Threads for X, one post edited past 280', `${panel}?state=thread-over&format=thread&platform=x`);
     for (const width of [320, 420, 600]) frame('widths', `${width}px`, `${panel}?state=elsewhere`, width);
     // for (const width of [320, 420]) frame('widths', `Access code, ${width}px`, `${panel}?state=access-wrong`, width);
     const fits = { strong: 'good fit', thin: 'a stretch', none: 'poor fit' };
