@@ -1,5 +1,6 @@
 import { generateText } from 'ai';
 import { LENSES, DEFAULT_LENS } from '../prompts/lenses/index.js';
+import { isFitRating } from '../extension/fit.js';
 
 export class InvalidFitError extends Error { name = 'InvalidFitError'; }
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -31,9 +32,7 @@ export function parseFit(text, article, registry = LENSES, defaultLens = DEFAULT
   const source = normalized(article);
   for (const id of ids) {
     const item = value.fit[id];
-    if (!exactKeys(item, ['level', 'reason', 'evidence']) || !['strong', 'thin', 'none'].includes(item.level)
-      || typeof item.reason !== 'string' || !item.reason.trim() || item.reason.length > 300 || /[\r\n]/u.test(item.reason)
-      || [...new Intl.Segmenter('en', { granularity: 'sentence' }).segment(item.reason.trim())].length !== 1
+    if (!exactKeys(item, ['level', 'reason', 'evidence']) || !isFitRating(item)
       || !Array.isArray(item.evidence) || item.evidence.length > 5) return fail();
     if (item.level === 'none' ? item.evidence.length !== 0 : item.evidence.length === 0) return fail();
     if (item.evidence.some(quote => typeof quote !== 'string' || !normalized(quote) || !source.includes(normalized(quote)))) return fail();

@@ -75,4 +75,6 @@ Ideas from kickoff, not commitments: free text posts with paid video, posts in t
 
 ## Lens fit
 
+The shared `extension/fit.js` schema is used by the Worker, frontend and offline evals; keep it on the extension packaging allowlist. Global output records take `fitAssessment: {article, response}` from the actual `/fit` run, validate that the source snapshot matches and include `sourceFit` in schema version 2. The existing `lens_fit` judgment measures output adherence, never a replacement source rating. Strong fit does not approve quality; thin/none/missing fit requires review. See `evals/global/README.md`.
+
 `worker/fit.js` builds dynamic source-suitability instructions from `LENSES`, calls the configured model once with transport retries disabled, and validates complete IDs, levels, one-sentence reasons and internal exact source evidence for strong/thin ratings. Only `{fit:{id:{level,reason}}}` reaches the frontend. None requires empty evidence. Evidence matching proves provenance, not semantic support. `evals/fit/` supplies offline reference fixtures and saved-response comparison; mock tests are not evidence of live classification accuracy. See `evals/fit/README.md`.

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ApiError, DEFAULT_API, characters, rateFit, sourceLabel, wordCount, writePost } from './api.js';
+import { MOODS, DEFAULT_MOOD } from './moods.js';
 
 const reply = (body, status = 200) => new Response(JSON.stringify(body), { status });
 
@@ -33,7 +34,7 @@ test('writePost sends the access code as a bearer token and flags a 401', async 
 
 test('rateFit asks the Worker how each lens fits, and stays quiet when it cannot', async () => {
   let asked;
-  const fit = { story: { level: 'strong', reason: 'A clear moment.' } };
+  const fit = Object.fromEntries(MOODS.filter(lens => lens.id !== DEFAULT_MOOD).map(({ id }) => [id, { level: 'strong', reason: 'A clear moment.' }]));
   const got = await rateFit('Some words.', {
     code: 'c',
     fetcher: async (url, init) => { asked = { url, body: JSON.parse(init.body), auth: init.headers.Authorization }; return reply({ fit }); },
@@ -43,6 +44,8 @@ test('rateFit asks the Worker how each lens fits, and stays quiet when it cannot
   assert.equal(await rateFit('x', { fetcher: async () => reply({ error: { code: 'not_found' } }, 404) }), null);
   assert.equal(await rateFit('x', { fetcher: async () => { throw new TypeError('offline'); } }), null);
   assert.equal(await rateFit('x', { fetcher: async () => reply({}) }), null);
+  assert.equal(await rateFit('x', { fetcher: async () => reply({ fit: { story: fit.story } }) }), null);
+  assert.equal(await rateFit('x', { fetcher: async () => reply({ fit: { ...fit, story: { level: 'green', reason: 'Looks good.' } } }) }), null);
 });
 
 test('counts, words and the source label', () => {
