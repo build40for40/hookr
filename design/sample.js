@@ -69,7 +69,7 @@ export const SAMPLE = {
     cliffhanger: { level: 'strong', reason: 'A clear setup with the steps as the payoff.' },
     confession: { level: 'thin', reason: 'Only one small personal admission.' },
     scene: { level: 'thin', reason: 'The drive is the only vivid image.' },
-    behind: { level: 'none', reason: 'She doesn’t say why she wrote this, or how.' },
+    behind: { level: 'none', reason: 'This page doesn’t say why or how you wrote it.' },
     dialogue: { level: 'none', reason: 'No one speaks on this page.' },
   },
   drafted: 'Giving an AI agent your inbox means giving it the password reset links for your other accounts. Start with your calendar or one folder instead.',

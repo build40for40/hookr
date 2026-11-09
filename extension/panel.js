@@ -1,5 +1,5 @@
 import { characters, rateFit, sourceLabel, wordCount, writePost } from './api.js';
-import { DEFAULT_MOOD, FITS, better, moodFor, ordered } from './moods.js';
+import { DEFAULT_MOOD, FITS, moodFor, ordered } from './moods.js';
 import { readPage, tabNotice } from './page.js';
 import { clip, trace } from './trace.js';
 
@@ -121,11 +121,7 @@ function showPost(post) {
 
 // Every fit message says why in plain words: the lens, this piece, and the
 // Worker's one-sentence reason. Good fits and Pull quote say nothing.
-const FALLBACK = {
-  thin: "There's only a little on the page for it to work with.",
-  none: "There isn't much on the page for it to work with.",
-};
-const why = level => fit?.[mood]?.reason?.trim() || FALLBACK[level];
+const why = level => fit?.[mood]?.reason?.trim() || moodFor(mood).reasons?.[level] || '';
 
 // A stretch gets a quiet line above the post; a poor fit she chose to see
 // keeps its warning.
@@ -137,8 +133,8 @@ function stretch() {
   if (line.hidden) return;
   const { name } = moodFor(mood);
   const [title, note] = level === 'thin'
-    ? [`${name} could work, but it's a stretch for this piece.`, 'Worth a polish before you post.']
-    : [`This piece isn't a great fit for ${name}.`, 'Use it for ideas, not to post as-is.'];
+    ? [`This story is a stretch for the ${name} format.`, 'Worth a polish before you post.']
+    : [`This story isn't a great fit for the ${name} format.`, "We don't recommend posting it as is."];
   const strong = document.createElement('b');
   strong.textContent = title;
   line.replaceChildren(strong, ` ${why(level)} ${note}`);
@@ -148,17 +144,12 @@ function stretch() {
 // it might spark an idea, but she has to ask to see it.
 function reach() {
   const { name } = moodFor(mood);
-  const instead = better(fit);
-  $('reach-title').textContent = `This piece isn't a great fit for ${name}`;
-  $('reach-reason').textContent = `${why('none')} We wrote one anyway. It might spark an idea, but it's not one to post as-is.`;
-  $('reach-better').textContent = `Try ${instead.name}`;
-  $('reach-better').dataset.mood = instead.id;
-  $('reach-better').hidden = instead.id === mood;
+  $('reach-title').textContent = `This story isn't a great fit for the ${name} format`;
+  $('reach-reason').textContent = `${why('none')} We wrote one anyway because it might spark an idea. But we don't recommend posting it as is.`;
   show('reach');
   write({ hold: true });
 }
 
-$('reach-better').addEventListener('click', () => pick($('reach-better').dataset.mood));
 $('reach-show').addEventListener('click', () => {
   revealed = true;
   if (held === null) show('reading');

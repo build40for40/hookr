@@ -5,18 +5,41 @@
 //
 // `line` is shown under the chips, so it says what the lens does in plain words
 // for an author who has never heard of the style.
+//
+// `reasons` are the fallback why-sentences when /fit gives no reason of its
+// own: `thin` for a stretch, `none` for a poor fit. Pull quote always fits.
 export const MOODS = [
-  { id: 'line',        name: 'Pull quote',      line: 'Your strongest sentence, exactly as you wrote it.' },
-  { id: 'story',       name: 'Story',           line: 'Drops the reader into a moment, then the turn.' },
-  { id: 'lesson',      name: 'Lesson',          line: 'What you learned, then the moment that taught you.' },
-  { id: 'take',        name: 'Hot take',        line: 'Leads with the point most people would argue with.' },
-  { id: 'question',    name: 'Question',        line: 'Opens with a question your piece answers.' },
-  { id: 'howto',       name: 'How-to',          line: 'Your practical advice, as steps.' },
-  { id: 'cliffhanger', name: 'Cliffhanger',     line: 'The setup, stopping before the payoff, so they read the rest.' },
-  { id: 'confession',  name: 'Confession',      line: 'Leads with what you admit, or got wrong.' },
-  { id: 'scene',       name: 'Scene',           line: 'One vivid image or detail. No point made.' },
-  { id: 'behind',      name: 'Behind the page', line: 'Why you wrote it, or how.' },
-  { id: 'dialogue',    name: 'Dialogue',        line: 'Leads with something someone said.' },
+  { id: 'line', name: 'Pull quote', line: 'Your strongest sentence, exactly as you wrote it.' },
+  { id: 'story', name: 'Story', line: 'Drops the reader into a moment, then the turn.', reasons: {
+    thin: "There's a moment here, but not much of one.",
+    none: "There's no moment on this page to drop the reader into." } },
+  { id: 'lesson', name: 'Lesson', line: 'What you learned, then the moment that taught you.', reasons: {
+    thin: "The lesson is here, but not the moment that taught it.",
+    none: "This page doesn't draw a lesson from anything that happened." } },
+  { id: 'take', name: 'Hot take', line: 'Leads with the point most people would argue with.', reasons: {
+    thin: "There's a point here, but not one many people would argue with.",
+    none: "Nothing on this page goes against what most people think." } },
+  { id: 'question', name: 'Question', line: 'Opens with a question your piece answers.', reasons: {
+    thin: "There's an answer here, but it's hard to frame as a question.",
+    none: "This page doesn't answer a question a reader would ask." } },
+  { id: 'howto', name: 'How-to', line: 'Your practical advice, as steps.', reasons: {
+    thin: "There's some advice here, but not enough for clear steps.",
+    none: "There's no practical advice on this page to turn into steps." } },
+  { id: 'cliffhanger', name: 'Cliffhanger', line: 'The setup, stopping before the payoff, so they read the rest.', reasons: {
+    thin: "There's a payoff here, but not much of a setup.",
+    none: "There's no setup and payoff on this page to hold back." } },
+  { id: 'confession', name: 'Confession', line: 'Leads with what you admit, or got wrong.', reasons: {
+    thin: "There's only a small admission here to lead with.",
+    none: "There's no admission on this page, and nothing you say you got wrong." } },
+  { id: 'scene', name: 'Scene', line: 'One vivid image or detail. No point made.', reasons: {
+    thin: "There's only one small image here to work with.",
+    none: "There's no vivid image or detail on this page to show." } },
+  { id: 'behind', name: 'Behind the page', line: 'Why you wrote it, or how.', reasons: {
+    thin: "There's only a hint of why you wrote it.",
+    none: "This page doesn't say why or how you wrote it." } },
+  { id: 'dialogue', name: 'Dialogue', line: 'Leads with something someone said.', reasons: {
+    thin: "There's only a line or two of speech to work with.",
+    none: "No one speaks on this page." } },
 ];
 
 export const DEFAULT_MOOD = 'line';
@@ -38,10 +61,4 @@ export function ordered(fit) {
   return MOODS.map((mood, index) => ({ mood, index }))
     .sort((a, b) => rank(a.mood) - rank(b.mood) || a.index - b.index)
     .map(({ mood }) => mood);
-}
-
-// The lens to offer instead of a reach: the first good fit, else the first stretch.
-export function better(fit) {
-  const rated = ordered(fit).filter(({ id }) => id !== DEFAULT_MOOD && fit?.[id]);
-  return rated.find(({ id }) => fit[id].level === 'strong') ?? rated.find(({ id }) => fit[id].level === 'thin') ?? MOODS[0];
 }
