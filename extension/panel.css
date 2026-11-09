@@ -71,7 +71,7 @@ body {
 .format-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 8px; margin-top: 8px; }
 .format { position: relative; padding: 8px 2px 9px; border: 0; border-radius: 0; background: none; color: var(--meta); font: 500 14px/1.2 var(--ui); text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: inset 0 -1px 0 var(--bruise-hi); }
 .format:hover { color: var(--smoke); }
-.format[aria-pressed="true"] { color: var(--smoke); font-weight: 600; box-shadow: inset 0 -2px 0 var(--cherry), 0 6px 10px -8px var(--cherry); }
+.format[aria-pressed="true"] { color: var(--smoke); box-shadow: inset 0 -2px 0 var(--cherry), 0 6px 10px -8px var(--cherry); }
 .format-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-top: 10px; }
 .format-meta p { flex: 1 1 160px; margin: 0; font-size: 13px; color: var(--muted); }
 .platforms { display: inline-flex; padding: 2px; border: 1px solid var(--bruise-hi); border-radius: 999px; background: var(--night); }
@@ -116,7 +116,7 @@ main { flex: 1; }
 
 .post.long { max-height: 46vh; overflow-y: auto; overscroll-behavior: contain; }
 
-/* Pearls: each post in a thread is its own small numbered card. */
+/* A thread shows each post as its own small numbered card. */
 .thread { list-style: none; margin: 10px 0 4px; padding: 0; counter-reset: pearl; display: grid; gap: 8px; }
 .pearl { position: relative; counter-increment: pearl; padding: 10px 12px 8px 40px; border-radius: 14px; background: rgba(0, 0, 0, 0.22); border: 1px solid var(--glass-edge); }
 .pearl::before { content: counter(pearl); position: absolute; left: 10px; top: 11px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 600 10px/1 var(--display); color: var(--cherry-ink); background: var(--smoke); }

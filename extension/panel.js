@@ -1,5 +1,5 @@
 import { rateFit, sourceLabel, wordCount, writePost } from './api.js';
-import { FORMATS, copyLabel, formatFor, measure, platformFor } from './formats.js';
+import { FORMATS, copyLabel, formatFor, measure, platformFor, postLabel } from './formats.js';
 import { DEFAULT_MOOD, FITS, moodFor, ordered } from './moods.js';
 import { READER_FILES, readPage, tabNotice } from './page.js';
 import { clip, trace } from './trace.js';
@@ -108,7 +108,6 @@ function setFormat() {
     choice.addEventListener('click', () => choosePlatform(id));
     return choice;
   }));
-  $('reading-line').textContent = format.loading;
   $('copy').textContent = copyLabel(format, platform);
 }
 
@@ -172,7 +171,7 @@ function showPost(result) {
   const reply = typeof result === 'string' ? { post: result } : result;
   const posts = format.id === 'thread' && reply.posts?.length ? reply.posts : [reply.post];
   original = posts.join('\n\n');
-  $('post-label').textContent = `${format.name} · ${platform.name}`;
+  $('post-label').textContent = postLabel(format, platform);
   $('post').hidden = format.id === 'thread';
   $('thread').hidden = format.id !== 'thread';
   $('post').classList.toggle('long', format.id === 'essay' || format.id === 'shorts');

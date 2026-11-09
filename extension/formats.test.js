@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FORMATS as WORKER_FORMATS } from '../prompts/formats/index.js';
-import { FORMATS, copyLabel, formatFor, measure, platformFor } from './formats.js';
+import { selectionFor } from '../prompts/formats/index.js';
+import { FORMATS, copyLabel, formatFor, measure, platformFor, postLabel } from './formats.js';
 
 test('every format and platform in the picker is one the Worker accepts', () => {
+  assert.deepEqual(FORMATS.map(({ name }) => name), ['X', 'LinkedIn', 'Threads', 'Essay', 'TikTok script', 'Instagram']);
   for (const format of FORMATS) {
-    assert.deepEqual(format.platforms.map(({ id }) => id), WORKER_FORMATS[format.id].platforms, format.id);
+    for (const platform of format.platforms) assert.deepEqual(selectionFor(format.id, platform.id), { format: format.id, platform: platform.id });
   }
-  assert.equal(new Set(FORMATS.map(({ name }) => name)).size, FORMATS.length);
 });
 
 test('unknown IDs fall back to the first format and platform', () => {
@@ -15,7 +15,12 @@ test('unknown IDs fall back to the first format and platform', () => {
   assert.equal(platformFor(formatFor('thread'), 'nope').id, 'x');
 });
 
-test('copy says where it is going, or that it is a thread', () => {
+test('labels say what it is and where it is going', () => {
+  const tweet = formatFor('tweet');
+  assert.equal(postLabel(tweet, platformFor(tweet)), 'Your post for X');
+  assert.equal(copyLabel(tweet, platformFor(tweet)), 'Copy for X');
+  const essay = formatFor('essay');
+  assert.equal(postLabel(essay, platformFor(essay, 'linkedin')), 'Your essay for LinkedIn');
   const feed = formatFor('feed');
   assert.equal(copyLabel(feed, platformFor(feed, 'linkedin')), 'Copy for LinkedIn');
   const thread = formatFor('thread');
