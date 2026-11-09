@@ -1,5 +1,5 @@
 import { characters, rateFit, sourceLabel, wordCount, writePost } from './api.js';
-import { DEFAULT_MOOD, FITS, better, moodFor, ordered } from './moods.js';
+import { DEFAULT_MOOD, FITS, moodFor, ordered } from './moods.js';
 import { readPage, tabNotice } from './page.js';
 import { clip, trace } from './trace.js';
 
@@ -38,32 +38,25 @@ const levelOf = id => (id === DEFAULT_MOOD ? null : fit?.[id]?.level in FITS ? f
 
 function setMood(id) {
   mood = moodFor(id).id;
-  const level = levelOf(mood);
   $('mood-line').textContent = moodFor(mood).line;
-  if (level) {
-    const name = document.createElement('span');
-    name.className = 'fit-name';
-    name.textContent = ` · ${FITS[level].name}`;
-    $('mood-line').append(name);
-  }
   for (const chip of $('moods').children) chip.setAttribute('aria-pressed', String(chip.dataset.mood === mood));
 }
 
 function chips() {
-  $('moods').replaceChildren(...ordered(fit).map(({ id, name }) => {
+  $('moods').replaceChildren(...ordered(fit).map(({ id, name, line }) => {
     const chip = document.createElement('button');
     const level = levelOf(id);
     chip.className = 'mood';
     chip.dataset.mood = id;
     if (level) {
       chip.dataset.fit = level;
-      chip.title = FITS[level].name;
       const dot = document.createElement('span');
       dot.className = 'fit';
       dot.setAttribute('aria-hidden', 'true');
       chip.append(dot);
     }
     chip.append(name);
+    chip.title = level ? `${line} ${FITS[level].name}.` : line;
     if (level) chip.setAttribute('aria-label', `${name}, ${FITS[level].name.toLowerCase()}`);
     chip.addEventListener('click', () => pick(id));
     return chip;
@@ -126,38 +119,37 @@ function showPost(post) {
   show('result');
 }
 
-// A stretch gets a quiet line above the post; a reach she chose to see keeps
-// its warning. Good fits and Pull quote say nothing.
+// Every fit message says why in plain words: the lens, this piece, and the
+// Worker's one-sentence reason. Good fits and Pull quote say nothing.
+const why = level => fit?.[mood]?.reason?.trim() || moodFor(mood).reasons?.[level] || '';
+
+// A stretch gets a quiet line above the post; a poor fit she chose to see
+// keeps its warning.
 function stretch() {
   const level = levelOf(mood);
   const line = $('stretch');
   line.hidden = level !== 'thin' && level !== 'none';
   line.classList.toggle('reach', level === 'none');
   if (line.hidden) return;
+  const { name } = moodFor(mood);
   const [title, note] = level === 'thin'
-    ? ['A bit of a stretch.', 'Worth a polish before you post.']
-    : ['A reach for this page.', 'For ideas, not for posting as-is.'];
+    ? [`This story is a stretch for the ${name} format.`, 'Worth a polish before you post.']
+    : [`This story isn't a great fit for the ${name} format.`, "We don't recommend posting it as is."];
   const strong = document.createElement('b');
   strong.textContent = title;
-  line.replaceChildren(strong, ` ${note}`);
+  line.replaceChildren(strong, ` ${why(level)} ${note}`);
 }
 
 // A reach: the page has little for this lens. Hookr still writes one, because
 // it might spark an idea, but she has to ask to see it.
 function reach() {
   const { name } = moodFor(mood);
-  const instead = better(fit);
-  const reason = fit?.[mood]?.reason?.trim() || "There wasn't much on the page to build it from.";
-  $('reach-title').textContent = `${name} is a reach here`;
-  $('reach-reason').textContent = `${reason} We wrote one anyway: worth a look for ideas, not for posting as-is.`;
-  $('reach-better').textContent = `Try ${instead.name}`;
-  $('reach-better').dataset.mood = instead.id;
-  $('reach-better').hidden = instead.id === mood;
+  $('reach-title').textContent = `This story isn't a great fit for the ${name} format`;
+  $('reach-reason').textContent = `${why('none')} We wrote one anyway because it might spark an idea. But we don't recommend posting it as is.`;
   show('reach');
   write({ hold: true });
 }
 
-$('reach-better').addEventListener('click', () => pick($('reach-better').dataset.mood));
 $('reach-show').addEventListener('click', () => {
   revealed = true;
   if (held === null) show('reading');
