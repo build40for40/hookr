@@ -21,7 +21,7 @@ test('POST /post turns text into a post, readable from any origin, and logs who 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('Access-Control-Allow-Origin'), '*');
   assert.deepEqual(await response.json(), { post: 'A post.', excerpt: 'The article.', length: 7 });
-  assert.deepEqual(log.mock.calls.map(call => call.arguments), [[{ event: 'post', person: 'kate', mood: null }]]);
+  assert.deepEqual(log.mock.calls.map(call => call.arguments), [[{ event: 'post', person: 'kate', mood: null, format: 'tweet', platform: 'x' }]]);
 });
 
 test('POST /post needs a valid access code, and fails closed when none are set', async () => {

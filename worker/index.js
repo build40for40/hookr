@@ -1,5 +1,6 @@
 import { bearer, parseCodes, personFor } from './access.js';
 import { InsufficientSourceError, MAX_TEXT, modelFor, NoValidPostError, writePost } from './post.js';
+import { selectionFor } from '../prompts/formats/index.js';
 
 // CORS allows any origin: requests carry an access code header, never cookies.
 const headers = {
@@ -26,11 +27,13 @@ async function post(request, env, model) {
   if (!text) return error('bad_request', 'Send JSON with a "text" field.', 400);
   if (text.length > MAX_TEXT) return error('too_long', `That's over ${MAX_TEXT.toLocaleString('en-GB')} characters. Try a single article.`, 413);
   if (body.mood !== undefined && (typeof body.mood !== 'string' || body.mood.length > 64)) return error('bad_request', 'Mood must be a short lens ID.', 400);
+  const selection = selectionFor(body.format, body.platform);
+  if (!selection) return error('bad_request', 'Choose a supported format and platform. See prompts/formats/README.md.', 400);
   if (!env.MODEL) return error('not_configured', 'No model is set on the server.', 503);
 
   try {
-    const written = await writePost(model(), text, { mood: body.mood });
-    console.log({ event: 'post', person, mood: body.mood ?? null });
+    const written = await writePost(model(), text, { mood: body.mood, ...selection });
+    console.log({ event: 'post', person, mood: body.mood ?? null, ...selection });
     return json(written);
   } catch (cause) {
     if (cause instanceof InsufficientSourceError) {
