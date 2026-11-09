@@ -24,7 +24,7 @@ That starts the API on http://localhost:8787. Then:
 
 No build step: after changing extension files, click **Reload** on its card, then click the icon again (reloading closes the panel). Right-click inside the panel and choose **Inspect** for its console.
 
-To check the panel's look without Chrome or the API, serve the repo (`python3 -m http.server`) and open http://localhost:8000/design/preview.html: every screen and mood, plus the panel at 320, 420 and 600px wide.
+To check the panel's look without Chrome or the API, serve the repo (`python3 -m http.server`) and open http://localhost:8000/design/preview.html: every screen and lens, plus the panel at 320, 420 and 600px wide.
 
 ## Commands
 
@@ -42,7 +42,7 @@ To check the panel's look without Chrome or the API, serve the repo (`python3 -m
 Deployed at https://hookr-api.40for40.workers.dev.
 
 - `GET /health`: `{ "ok": true }`
-- `POST /post` with `Authorization: Bearer <access code>` and `{ "text": "...", "mood": "calm" }`: `{ "post": "...", "excerpt": "...", "length": 0 }`. `post` is at most 280 by X's weighted count (`length`), and `excerpt` is the passage from the article that supports it, checked against the text sent. Errors are `{ "error": { "code", "message" } }`, including 401 `unauthorised` for a missing or wrong code, 429 `rate_limited` past 20 posts a minute for one person, 503 `not_configured` when no codes are set, and 422 `insufficient_source` when the page has too little to work with.
+- `POST /post` with `Authorization: Bearer <access code>` and `{ "text": "...", "mood": "story" }`: `{ "post": "...", "excerpt": "...", "length": 0 }`. `post` is at most 280 by X's weighted count (`length`), and `excerpt` is the passage from the article that supports it, checked against the text sent. Errors are `{ "error": { "code", "message" } }`, including 401 `unauthorised` for a missing or wrong code, 429 `rate_limited` past 20 posts a minute for one person, 503 `not_configured` when no codes are set, and 422 `insufficient_source` when the page has too little to work with.
 
 ### Access codes
 
@@ -53,7 +53,7 @@ The API is for the team and Kate while we test, so `POST /post` needs a personal
 - `secret put` replaces the whole value and takes effect within seconds, with no code change or CI run. Wrangler can't show a secret's value, so the list in the password manager is the only copy.
 - **Locally:** put a pair in `ACCESS_CODES` in `.dev.vars`. With it unset, `POST /post` answers 503 `not_configured`.
 
-The base prompt is [prompts/generate-post-v1.md](prompts/generate-post-v1.md). Each mood selects a separate [lens sub-prompt](prompts/lenses/README.md), composed with the base by `worker/lenses.js`. `mood` is optional; missing or unknown IDs use Elegant. The reply format is unchanged.
+The base prompt is [prompts/generate-post-v1.md](prompts/generate-post-v1.md). Each lens (sent as `mood`) selects a separate [lens sub-prompt](prompts/lenses/README.md), composed with the base by `worker/lenses.js`. `mood` is optional; missing or unknown IDs use Best line. The reply format is unchanged.
 
 The Worker uses the [AI SDK](https://ai-sdk.dev), so the model is one setting: `MODEL` in `wrangler.jsonc`, written `provider:model` (`anthropic`, `openai` or `google`). It's `anthropic:claude-sonnet-5-5`. CI copies the org's `ANTHROPIC_API_KEY` secret into the Worker on every deploy; switching provider means adding its key (`OPENAI_API_KEY` or `GOOGLE_GENERATIVE_AI_API_KEY`) to the deploy step's `secrets` in `.github/workflows/ci.yml`.
 
