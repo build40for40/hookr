@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Hookr",
+  "version": "0.1.0",
+  "description": "Turns the page you're reading into one post for X, built around a hook from your own words. Nothing invented.",
+  "author": "40 for 40",
+  "homepage_url": "https://build40for40.com/hookr/",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": [
+    "http://localhost:8787/*",
+    "https://hookr-api.40for40.workers.dev/*"
+  ],
+  "action": {
+    "default_title": "Hookr",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  }
+}

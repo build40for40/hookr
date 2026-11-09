@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hookr-api",
+  "main": "worker/index.js",
+  "account_id": "9b4d3e616e55585a0ae844f424717b43",
+  "compatibility_date": "2026-11-05",
+  "workers_dev": true,
+  "observability": { "enabled": true }
+}

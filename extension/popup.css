@@ -1,0 +1,55 @@
+:root {
+  color-scheme: light;
+  --paper: #f4eee3;
+  --sheet: #fbf8f2;
+  --ink: #1e1b17;
+  --ink-soft: #5b544a;
+  --rule: #d6ccb9;
+  --red: #8a2a22;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  width: 360px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 15px/1.5 "Newsreader", Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+[hidden] { display: none !important; }
+
+.bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--rule); font-weight: 500; font-size: 16px; }
+.bar img { width: 22px; height: 22px; }
+.bar .source { margin-left: auto; font-weight: 400; font-size: 13px; color: var(--ink-soft); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.body { padding: 16px; }
+.label { font-variant: all-small-caps; letter-spacing: 0.08em; font-size: 13px; color: var(--ink-soft); }
+
+.post { background: var(--sheet); border: 1px solid var(--rule); padding: 14px 16px; margin: 6px 0 4px; font-size: 18px; line-height: 1.4; white-space: pre-wrap; }
+.count { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); }
+.count b { font-weight: 500; color: var(--ink); }
+
+.actions { display: flex; gap: 8px; margin-top: 18px; }
+button { font: inherit; font-size: 15px; cursor: pointer; padding: 8px 14px; border-radius: 2px; }
+.primary { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); flex: 1; }
+.primary:hover { background: var(--red); border-color: var(--red); }
+.quiet { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+.quiet:hover { border-color: var(--ink); }
+
+.error { margin: 0; color: var(--red); }
+
+.foot { padding: 10px 16px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; }
+
+.reading { padding: 40px 24px 44px; text-align: center; }
+.reading p { margin: 0 0 6px; font-size: 18px; }
+.reading small { color: var(--ink-soft); font-size: 14px; }
+.lines { margin: 22px auto 0; width: 200px; }
+.lines span { display: block; height: 1px; background: var(--rule); margin: 9px 0; animation: read 1.6s ease-in-out infinite; }
+.lines span:nth-child(2) { width: 88%; animation-delay: 0.2s; }
+.lines span:nth-child(3) { width: 94%; animation-delay: 0.4s; }
+.lines span:nth-child(4) { width: 60%; animation-delay: 0.6s; }
+@keyframes read { 0% { background: var(--rule); } 50% { background: var(--red); } 100% { background: var(--rule); } }
+@media (prefers-reduced-motion: reduce) { .lines span { animation: none; } }
