@@ -1,6 +1,8 @@
-import { LENSES, lensDefinitionFor } from '../../prompts/lenses/index.js';
+import { LENSES, DEFAULT_LENS, lensDefinitionFor } from '../../prompts/lenses/index.js';
+import { sourceFitFor } from '../fit/index.js';
 import twitter from 'twitter-text';
 import { validateFormat } from '../../worker/formats.js';
+import { excerptInArticle } from '../../worker/post.js';
 
 export const CRITERIA = Object.freeze([
   'source_fidelity', 'naturalness', 'author_voice', 'lens_fit',
@@ -28,15 +30,16 @@ export function validateTrendSignals(signals, { platform, now = new Date(), maxA
 
 /** Pure offline evaluation. Judgments are reviewer/model assessments, not deterministic proof. */
 export function evaluateOutput({ article, output, format = 'tweet', platform = 'x', lens,
-  judgments = {}, trendSignals = [], now = new Date(), maxAgeDays = 7, constraints = {}, promptVersion = null, trendRequested = false, lensRegistry = LENSES }) {
+  judgments = {}, trendSignals = [], now = new Date(), maxAgeDays = 7, constraints = {}, promptVersion = null, trendRequested = false, lensRegistry = LENSES, defaultLens = DEFAULT_LENS, fitAssessment }) {
   if (typeof article !== 'string') throw new TypeError('article must be a string');
   const lensDefinition = lensDefinitionFor(lens, lensRegistry);
+  const sourceFit = sourceFitFor({ article, lens, fitAssessment, registry: lensRegistry, defaultLens });
   const post = typeof output?.post === 'string' ? output.post : '';
   const excerpt = typeof output?.excerpt === 'string' ? output.excerpt : '';
   const checks = [check('nonempty_output', post.trim().length > 0, 'A nonempty post is required')];
   if (lens !== undefined && lens !== null) checks.push(check('known_lens', Boolean(lensDefinition), 'Selected lens must have registered instructions; no silent evaluation fallback'));
-  checks.push(check('source_excerpt', Boolean(excerpt.trim()) && normalize(article).includes(normalize(excerpt)),
-    'Exact contiguous source excerpt after NFC and whitespace normalization; does not prove claim support'));
+  checks.push(check('source_excerpt', excerptInArticle(excerpt, article),
+    'Same contiguous-excerpt check as the Worker, normalizing whitespace, Unicode and quote typography; does not prove claim support'));
   const aliases = { longform: 'essay', shorts: 'shorts', instagram: 'caption', thread: 'thread', tweet: 'tweet' };
   const kind = aliases[format] ?? format;
   const canonical = kind === 'caption' ? 'instagram' : kind;
@@ -74,7 +77,7 @@ export function evaluateOutput({ article, output, format = 'tweet', platform = '
         return pending(id, 'Requires claim-to-exact-source mappings; reviewer must cover every factual claim');
       }
     }
-    return { ...judgment, id, status: judgment.score >= 1 ? 'pass' : 'fail' };
+    return { ...judgment, id, ...(id === 'lens_fit' ? { evaluates: 'output_adherence' } : {}), status: judgment.score >= 1 ? 'pass' : 'fail' };
   });
   const validSignals = validateTrendSignals(trendSignals, { platform, now, maxAgeDays });
   const trend = judgments.trend_fit;
@@ -84,7 +87,12 @@ export function evaluateOutput({ article, output, format = 'tweet', platform = '
     trendFit = { ...trend, id: 'trend_fit', status: trend.score >= 1 ? 'pass' : 'fail' };
   } else if (validSignals.length) trendFit = pending('trend_fit', 'Fresh signals supplied; requires judgment citing their URLs');
   const required = [...checks, ...subjective.filter(s => !(s.id === 'lens_fit' && !lens))];
+  // A green source rating never approves an answer. Missing/poor source fit
+  // requires review even when the separate output-adherence judgment passes.
+  if (sourceFit.status !== 'not_applicable' && !(sourceFit.status === 'assessed' && sourceFit.level === 'strong')) {
+    required.push(pending('source_lens_fit', sourceFit.reason));
+  }
   if (trendRequested) required.push(trendFit);
-  return { schemaVersion: 1, format, platform, lens: lens ?? null, lensDefinition: lensDefinition ? { ...lensDefinition } : null, promptVersion, trendRequested, checks, judgments: subjective, trend: trendFit,
+  return { schemaVersion: 2, format, platform, lens: lens ?? null, lensDefinition: lensDefinition ? { ...lensDefinition } : null, sourceFit, promptVersion, trendRequested, checks, judgments: subjective, trend: trendFit,
     trendEvidence: validSignals, readiness: required.some(c => c.status === 'fail') ? 'fail' : required.some(c => c.status === 'not_assessed') ? 'needs_review' : 'pass' };
 }

@@ -1,10 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluateOutput, validateTrendSignals, CRITERIA } from './index.js';
+import { LENSES, DEFAULT_LENS } from '../../prompts/lenses/index.js';
 
 const article = 'Start small. One read-only folder may help you review mistakes.';
 const base = { article, output: { post: 'Start small.', excerpt: 'Start small.' } };
 const result = (args = {}) => evaluateOutput({ ...base, ...args });
+const assessment = (level = 'strong') => ({ article, response: { fit: Object.fromEntries(Object.keys(LENSES).filter(id => id !== DEFAULT_LENS).map(id => [id, { level, reason: 'The page supports this lens.' }])) } });
+const completeJudgments = () => {
+  const judgments = Object.fromEntries(CRITERIA.map(id => [id, { score: 1, reason: 'Reviewed against source and rubric', reviewer: 'human:Samira' }]));
+  judgments.source_fidelity.claims = [{ claim: 'Start small.', quote: 'Start small.' }];
+  return judgments;
+};
 const signal = { platform: 'x', url: 'https://example.org/posts/1', publishedAt: '2026-11-08T00:00:00Z', observedAt: '2026-11-09T00:00:00Z', observation: 'Question-led openings', evidence: 'A sourced example' };
 const freshness = { platform: 'x', now: '2026-11-09T12:00:00Z' };
 test('offline checks cannot claim naturalness, fidelity or overall quality', () => {
@@ -24,6 +31,13 @@ test('exact excerpt does not prove unsupported output claims', () => {
   assert.equal(r.checks.find(c => c.id === 'source_excerpt').status, 'pass');
   assert.equal(r.judgments.find(c => c.id === 'source_fidelity').status, 'not_assessed');
 });
+test('excerpt validation matches Worker quote typography without accepting stitched passages', () => {
+  const source = 'She said “start small.” Then we chose one folder. It wasn’t easy.';
+  const r = result({ article: source, output: { post: 'Start small.', excerpt: 'It wasn\'t easy.' } });
+  assert.equal(r.checks.find(c => c.id === 'source_excerpt').status, 'pass');
+  const stitched = result({ article: source, output: { post: 'Start small.', excerpt: 'She said “start small.” It wasn’t easy.' } });
+  assert.equal(stitched.checks.find(c => c.id === 'source_excerpt').status, 'fail');
+});
 test('claim mapping rejects fabricated quotes; records explicit fidelity failure', () => {
   const judgment = { score: 0, reason: 'Changes may to will', reviewer: 'human:Samira', claims: [{ claim: 'Start small.', quote: 'Start small.' }] };
   assert.equal(result({ judgments: { source_fidelity: judgment } }).readiness, 'fail');
@@ -34,7 +48,7 @@ test('claim mapping rejects fabricated quotes; records explicit fidelity failure
 test('complete documented review can pass without trend evidence', () => {
   const judgments = Object.fromEntries(CRITERIA.map(id => [id, { score: 1, reason: 'Reviewed against source and rubric', reviewer: 'human:Samira' }]));
   judgments.source_fidelity.claims = [{ claim: 'Start small.', quote: 'Start small.' }];
-  const r = result({ judgments, lens: 'story' });
+  const r = result({ judgments, lens: 'story', fitAssessment: assessment() });
   assert.equal(r.readiness, 'pass');
   assert.equal(r.trend.status, 'not_assessed');
 });
@@ -97,4 +111,33 @@ test('lens evaluation snapshots the selected definition and rejects unknown IDs'
   assert.equal(unknown.lensDefinition, null);
   assert.equal(unknown.judgments.find(j => j.id === 'lens_fit').status, 'not_assessed');
   assert.equal(result({ lens: 'story' }).lensDefinition.id, 'story');
+});
+
+test('source fit is the saved UI response, independent from output adherence and fidelity', () => {
+  const fitAssessment = assessment();
+  const judgments = completeJudgments();
+  const r = result({ lens: 'story', fitAssessment, judgments });
+  assert.deepEqual(r.sourceFit, { status: 'assessed', ...fitAssessment.response.fit.story });
+  assert.equal(r.judgments.find(j => j.id === 'lens_fit').evaluates, 'output_adherence');
+  assert.equal(r.readiness, 'pass');
+  judgments.source_fidelity = { score: 0, reason: 'The output invents an event.', reviewer: 'human:Samira' };
+  assert.equal(result({ lens: 'story', fitAssessment, judgments }).readiness, 'fail');
+  assert.equal(result({ lens: 'story', fitAssessment }).readiness, 'needs_review');
+});
+
+test('thin, none, missing and mismatched source assessments cannot silently become green', () => {
+  const judgments = completeJudgments();
+  for (const level of ['thin', 'none']) {
+    const r = result({ lens: 'story', fitAssessment: assessment(level), judgments });
+    assert.equal(r.sourceFit.level, level);
+    assert.equal(r.readiness, 'needs_review');
+  }
+  for (const fitAssessment of [undefined, { ...assessment(), article: 'A different article.' }, { article, response: { fit: { story: { level: 'strong', reason: 'A moment.' } } } }]) {
+    const r = result({ lens: 'story', fitAssessment, judgments });
+    assert.equal(r.sourceFit.status, 'not_assessed');
+    assert.equal(r.readiness, 'needs_review');
+  }
+  const r = result({ lens: DEFAULT_LENS, judgments });
+  assert.equal(r.sourceFit.status, 'not_applicable');
+  assert.equal(r.readiness, 'pass');
 });

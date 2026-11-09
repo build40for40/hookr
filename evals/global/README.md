@@ -1,5 +1,11 @@
 # Shared output evaluation
 
+## One fit assessment, shared with the UI
+
+`POST /fit` assesses source suitability once per article. Save that exact response beside its input, then supply `fitAssessment: { article: sourceSnapshot, response: savedFitResponse }` to `evaluateOutput`. Reports use schema version 2 and include `sourceFit` with the same selected level/reason the frontend shows. The Worker, frontend and evaluators share level/reason/coverage validation in `extension/fit.js`; the evaluator does not generate another source-fit rating. An absent response, a different source snapshot or incomplete current lens coverage stays unassessed. Pull quote remains not applicable.
+
+The separate legacy `lens_fit` editorial criterion means **output adherence**: whether this generated answer follows the lens. Reports label that judgment `evaluates: 'output_adherence'`. Strong source fit cannot approve the output or cancel a factual error. Thin/none and missing assessments keep overall readiness at `needs_review` even if the output judgments pass; an actual failed check still yields `fail`. Source excerpts, voice, quality and platform checks retain their own results. The supplied response is a saved run record, not cryptographically authenticated proof; preserve its prompt commit, configured model, timestamp and exact article together.
+
 One rubric applies across tweet, essay (Substack/LinkedIn), shorts, Instagram and thread (X/Threads). Format checks are separate from editorial judgment. No heuristic or mock test establishes that writing is human, faithful or good.
 
 Mechanical rules reuse `worker/formats.js`, so generation and evaluation stay aligned. Run validator regression tests with `node --test evals/global/*.test.js`. These test the evaluator, not live model performance. Keep the existing v1 baseline and raw failures unchanged.
