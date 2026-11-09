@@ -21,6 +21,15 @@ That starts the API on http://localhost:8787. Then:
 3. Pin Hookr from the puzzle-piece menu, open an article and click its icon. Hookr opens in the side panel, reads the page and writes a post.
 4. The panel stays open when you switch tabs. Hookr can only read a tab after you click its icon there, so click it again on each article you want to hook. Moving to another page on a site you already clicked on shows **Hook this page**.
 
+### What it reads
+
+Hookr decides on your device whether the page is a post, and only a post's words ever leave it.
+
+- **Highlighted text wins.** Select 40 characters or more and Hookr uses exactly that, on any site or feed.
+- **X, LinkedIn and Reddit:** a single post's page only (`x.com/<user>/status/<id>`, LinkedIn `/posts/…` or `/feed/update/…`, Reddit `/r/<sub>/comments/…`), and only that post: no replies, comments, counts or buttons. Feeds, profiles and search pages aren't posts.
+- **Everywhere else:** [Mozilla Readability](https://github.com/mozilla/readability) pulls out the main text, and Hookr weighs the page's metadata, how long and link-heavy the text is and how many headlines link elsewhere. A post is sent with its title (and subtitle on Substack) as the first line. A homepage or feed sends nothing. When it can't tell, the panel asks before sending, with **Hook it anyway**.
+- **Paywalled Substack posts** say so instead of writing from the free preview.
+
 No build step: after changing extension files, click **Reload** on its card, then click the icon again (reloading closes the panel). Right-click inside the panel and choose **Inspect** for its console.
 
 To check the panel's look without Chrome or the API, serve the repo (`python3 -m http.server`) and open http://localhost:8000/design/preview.html: every screen and lens, plus the panel at 320, 420 and 600px wide.
@@ -35,6 +44,7 @@ To check the panel's look without Chrome or the API, serve the repo (`python3 -m
 | `npm run access-code -- <name>` | Prints a fresh access code and its `name:code` pair |
 | `npm run extension:package` | Store ZIP in `dist/`, pointed at the live API |
 | `npm run extension:package:dev` | Same files, keeps localhost. Never upload it |
+| `node scripts/vendor-readability.mjs` | Copies the pinned `@mozilla/readability` into `extension/vendor/` after a version bump |
 
 ## API
 

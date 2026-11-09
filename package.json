@@ -17,6 +17,8 @@
     "wrangler": "env -u CLOUDFLARE_API_KEY -u CLOUDFLARE_EMAIL wrangler --profile 40for40"
   },
   "devDependencies": {
+    "@mozilla/readability": "0.6.0",
+    "jsdom": "30.1.3",
     "wrangler": "4.157.0"
   },
   "dependencies": {

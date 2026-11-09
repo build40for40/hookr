@@ -23,6 +23,8 @@ export const SAMPLE = {
     title: 'Before you turn on your AI agent...do this first',
     url: 'https://katebmarshall.substack.com/p/before-you-turn-on-your-ai-agentdo',
     text: paragraphs.join('\n\n'),
+    verdict: 'post',
+    source: 'readability',
   },
   hooks: {
     line: [
