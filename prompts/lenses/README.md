@@ -24,7 +24,7 @@ The retired moods (elegant, calm, light, serious, dramatic, beast, tiktok) fall 
 
 ## Fit
 
-The extension also asks `POST /fit { text }` for `{ fit: { <id>: { level: 'strong' | 'thin' | 'none', reason } } }` covering every lens except `line`, to colour the picker and gate reaches. The route isn't built yet; until it is, the extension leaves lenses unrated. `reason` is one sentence for the author, about the page and never a judgement of the writing.
+The extension also asks `POST /fit { text }` for `{ fit: { <id>: { level: 'strong' | 'thin' | 'none', reason } } }` covering every lens except `line`, to colour the picker and gate reaches. The route is implemented in `worker/fit.js`, sharing access-code auth, rate limiting and the article cap with `/post`. It rates all current registry IDs except the default, in one model call. Internal exact source evidence is required for strong/thin ratings; the client receives only level and reason. Malformed, incomplete, unsourced or failed responses return an error, leaving the extension unrated. `reason` is one sentence for the author, about the page and never a judgement of the writing.
 
 ## Frontend and Worker contract
 
@@ -32,8 +32,14 @@ The extension also asks `POST /fit { text }` for `{ fit: { <id>: { level: 'stron
 
 Labels are not IDs. Rename a button without changing its stable ID when its meaning is unchanged. To change its meaning, edit its own sub-prompt file or introduce a new ID. Never silently repurpose a saved ID for an unrelated lens: existing installs remember it. Unknown retired IDs fall back to Best line.
 
-To add a lens, add its UI metadata in `extension/moods.js`, its own sub-prompt file and registration in `index.js`. No Worker route or model call logic changes are needed. The frontend coverage test catches missing sub-prompts. Remove its UI entry when retiring a lens; keeping its sub-prompt briefly supports older extension versions.
+To add a lens, add its UI metadata in `extension/moods.js`, its own sub-prompt file and registration in `index.js`. No Worker route or model call logic changes are needed. The shared `LENSES` registry derives stable IDs and labels from `extension/moods.js`, joined with each registered style prompt. Missing definitions and duplicate IDs fail immediately. There is no fixed lens count in Worker routing or evaluation. The frontend coverage test catches missing sub-prompts. Remove its UI entry when retiring a lens; keeping its sub-prompt briefly supports older extension versions.
 
 Run `npm run check` and `npm run extension:package:dev`. Live evaluation should compare the same source across lenses, scoring fidelity and exact excerpts before style. Mood instructions must never weaken the base source rules or change the parsed reply labels. A rewritten post may correctly be flagged by the frontend as not word for word; it must never be presented as a verbatim quotation.
 
 Trend context is a separate future input, not a mood and not implemented here. Never claim a topic is trending without fresh evidence.
+
+## Evaluation contract
+
+`evals/global/index.js` resolves `lens` against the same `LENSES` registry as the Worker and stores a `lensDefinition` snapshot (stable ID, label and exact style instructions) in each offline review record. Judges must receive those instructions, not guess from a name. An unknown requested lens fails `known_lens` and leaves `lens_fit` unassessed, rather than judging a different fallback style. API responses remain unchanged; the snapshot belongs only in offline evaluation records. For historical evaluations, pass a previously saved, trusted registry as `lensRegistry`; validate it with `createLensRegistry` when constructing it. Renaming a label or changing its instructions needs no evaluator code change. Saved snapshots preserve which definition a prior review assessed.
+
+Best line is verbatim; other lenses may reword without inventing claims, experiences or motives. Dialogue must preserve quoted speech exactly. For longer formats, format length/structure still wins: review this interplay explicitly rather than silently marking an expanded Best line as verbatim. Fit prediction accuracy and reason quality are separate work under card 230; the `/fit` backend now uses the same registry; live fit accuracy remains uncalibrated.

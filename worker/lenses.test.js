@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MOODS, DEFAULT_MOOD } from '../extension/moods.js';
-import { DEFAULT_LENS, LENS_PROMPTS, lensFor } from '../prompts/lenses/index.js';
+import { DEFAULT_LENS, LENS_PROMPTS, LENSES, createLensRegistry, lensDefinitionFor, lensFor } from '../prompts/lenses/index.js';
+import { FORMATS } from '../prompts/formats/index.js';
 import { PROMPT } from './prompt.js';
 import { instructionsFor } from './lenses.js';
 import { handle } from './index.js';
@@ -58,5 +59,36 @@ test('older clients and unknown lens IDs still generate; non-string IDs are reje
   for (const mood of [null, {}, ['calm'], 'x'.repeat(65)]) {
     const response = await handle(new Request('http://api/post',{method:'POST',headers:AUTH,body:JSON.stringify({text:'Start small.',mood})}),ENV, () => {throw Error('must not call model');});
     assert.equal(response.status,400);
+  }
+});
+
+
+test('registry scales to eleven or more definitions without changing prompt or eval routing', () => {
+  const moods = Array.from({ length: 11 }, (_, i) => ({ id: `style_${i}`, name: `Style ${i}` }));
+  const prompts = Object.fromEntries(moods.map(({ id }) => [id, `Instructions for ${id}`]));
+  const registry = createLensRegistry(moods, prompts);
+  assert.equal(Object.keys(registry).length, 11);
+  for (const { id } of moods) assert.equal(lensDefinitionFor(id, registry).instructions, prompts[id]);
+  assert.equal(lensDefinitionFor('__proto__', registry), null);
+  assert.throws(() => createLensRegistry(moods, {}), /Missing or invalid/);
+  assert.throws(() => createLensRegistry([moods[0], moods[0]], prompts), /Duplicate/);
+  for (const { id } of MOODS) assert.equal(LENSES[id].instructions, LENS_PROMPTS[id]);
+});
+
+
+test('every registered lens composes with every platform variant without changing source or format precedence', () => {
+  for (const [id, definition] of Object.entries(LENSES)) {
+    for (const [format, { platforms }] of Object.entries(FORMATS)) {
+      for (const platform of platforms) {
+        const instructions = instructionsFor(id, { format, platform });
+        assert.ok(instructions.includes(definition.instructions), `${id}/${format}/${platform}`);
+        if (format === 'tweet') assert.ok(instructions.startsWith(PROMPT));
+        else {
+          assert.ok(instructions.includes(`PLATFORM: ${platform}`));
+          assert.ok(instructions.includes('Every factual claim, personal experience, statistic and quotation must be supported by ARTICLE DATA'));
+          assert.ok(instructions.includes('selected format, JSON schema and platform constraints above take precedence'));
+        }
+      }
+    }
   }
 });
