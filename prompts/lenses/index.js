@@ -12,7 +12,7 @@ import behind from './behind.js';
 import dialogue from './dialogue.js';
 
 // Stable IDs are the API contract; labels and UI styling can change independently.
-// Retired IDs (elegant, calm, light, serious, dramatic, beast, tiktok) fall back to Best line.
+// Retired IDs (elegant, calm, light, serious, dramatic, beast, tiktok) fall back to Pull quote.
 export const DEFAULT_LENS = 'line';
 export const LENS_PROMPTS = Object.freeze({ line, story, lesson, take, question, howto, cliffhanger, confession, scene, behind, dialogue });
 

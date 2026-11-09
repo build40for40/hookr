@@ -2,7 +2,7 @@
 // the API (design/preview.html). Only the paragraphs the samples quote are here.
 // https://katebmarshall.substack.com/p/before-you-turn-on-your-ai-agentdo
 //
-// Best line is her words, copied exactly. The other lenses are sample drafts in
+// Pull quote is her words, copied exactly. The other lenses are sample drafts in
 // the style each lens asks for, built only from what's on her page. `fit` is how
 // the Worker might rate this article for each lens. `drafted` is kept for the
 // flagged screen.
