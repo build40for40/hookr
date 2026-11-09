@@ -63,7 +63,12 @@ export function modelFor(env) {
 export async function writePost(model, article) {
   const problems = [];
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
-    const { text } = await generateText({ model, instructions: PROMPT, prompt: `ARTICLE DATA\n\n${article}` });
+    const { text } = await generateText({
+      model,
+      instructions: PROMPT,
+      prompt: `ARTICLE DATA\n\n${article}`,
+      providerOptions: { anthropic: { fallbacks: 'default' } },
+    });
     const reply = parseReply(text);
     if (!reply) throw new InsufficientSourceError(text.trim());
 

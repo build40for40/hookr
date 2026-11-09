@@ -6,11 +6,11 @@ Hookr is for published authors who want a marketing drip feed from writing they'
 
 ## Run it locally
 
-Needs Node.js 24 (see `.node-version`), a model and an API key for its provider.
+Needs Node.js 24 (see `.node-version`) and an Anthropic API key.
 
 ```sh
 npm ci
-cp .dev.vars.example .dev.vars   # then fill in MODEL and that provider's key
+cp .dev.vars.example .dev.vars   # then fill in ANTHROPIC_API_KEY
 npm run dev
 ```
 
@@ -41,7 +41,7 @@ Deployed at https://hookr-api.40for40.workers.dev.
 
 The prompt is [prompts/generate-post-v1.md](prompts/generate-post-v1.md).
 
-The Worker uses the [AI SDK](https://ai-sdk.dev), so the model is one setting: `MODEL`, written `provider:model` (`anthropic`, `openai` or `google`). Nothing is assumed: set `MODEL` and the matching key (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GOOGLE_GENERATIVE_AI_API_KEY`) as Worker secrets, and `/post` answers 503 until `MODEL` is set.
+The Worker uses the [AI SDK](https://ai-sdk.dev), so the model is one setting: `MODEL` in `wrangler.jsonc`, written `provider:model` (`anthropic`, `openai` or `google`). It's `anthropic:claude-sonnet-5-5`. CI copies the org's `ANTHROPIC_API_KEY` secret into the Worker on every deploy; switching provider means adding its key (`OPENAI_API_KEY` or `GOOGLE_GENERATIVE_AI_API_KEY`) to the deploy step's `secrets` in `.github/workflows/ci.yml`.
 
 ## Publishing
 
