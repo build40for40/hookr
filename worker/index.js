@@ -17,10 +17,11 @@ async function post(request, env, model) {
   const text = typeof body?.text === 'string' ? body.text.trim() : '';
   if (!text) return error('bad_request', 'Send JSON with a "text" field.', 400);
   if (text.length > MAX_TEXT) return error('too_long', `That's over ${MAX_TEXT.toLocaleString('en-GB')} characters. Try a single article.`, 413);
+  if (body.mood !== undefined && (typeof body.mood !== 'string' || body.mood.length > 64)) return error('bad_request', 'Mood must be a short lens ID.', 400);
   if (!env.MODEL) return error('not_configured', 'No model is set on the server.', 503);
 
   try {
-    return json(await writePost(model(), text));
+    return json(await writePost(model(), text, { mood: body.mood }));
   } catch (cause) {
     if (cause instanceof InsufficientSourceError) {
       return error('insufficient_source', "There isn't enough in this page to write a post from.", 422);

@@ -3,7 +3,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createProviderRegistry, generateText } from 'ai';
 import twitter from 'twitter-text';
-import { PROMPT } from './prompt.js';
+import { instructionsFor } from './lenses.js';
 
 export const X_LIMIT = 280;
 export const MAX_TEXT = 100_000;
@@ -60,12 +60,13 @@ export function modelFor(env) {
   return registry.languageModel(env.MODEL);
 }
 
-export async function writePost(model, article) {
+export async function writePost(model, article, { mood } = {}) {
+  const instructions = instructionsFor(mood);
   const problems = [];
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
     const { text } = await generateText({
       model,
-      instructions: PROMPT,
+      instructions,
       prompt: `ARTICLE DATA\n\n${article}`,
       providerOptions: { anthropic: { fallbacks: 'default' } },
     });

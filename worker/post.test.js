@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mockModel } from './mock-model.js';
-import { PROMPT } from './prompt.js';
+import { instructionsFor } from './lenses.js';
 import { excerptInArticle, InsufficientSourceError, modelFor, NoValidPostError, parseReply, weightedLength, writePost, X_LIMIT } from './post.js';
 
 const article = 'A small pilot suggests that starting with one read-only folder may help teams spot mistakes. We have not tested whether this prevents data loss.';
 const reply = (post, excerpt) => `Post: ${post}\nSupporting excerpt: ${excerpt}`;
 
-test('writePost sends prompt v1 with the article as labelled data and returns the post and excerpt', async () => {
+test('writePost sends prompt v1 plus the default lens with the article as labelled data and returns the post and excerpt', async () => {
   const { model, prompts } = mockModel(reply('Start with one read-only folder.', '“starting with one read-only folder may help teams spot mistakes”'));
   assert.deepEqual(await writePost(model, article), {
     post: 'Start with one read-only folder.',
@@ -15,7 +15,7 @@ test('writePost sends prompt v1 with the article as labelled data and returns th
     length: 32,
   });
   const [system, user] = prompts[0];
-  assert.equal(system.content, PROMPT);
+  assert.equal(system.content, instructionsFor());
   assert.match(JSON.stringify(user.content), /^\[{"type":"text","text":"ARTICLE DATA\\n\\nA small pilot/);
 });
 

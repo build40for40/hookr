@@ -1,8 +1,7 @@
 // The store build rewrites this line to the live Worker (scripts/package-extension.mjs).
 export const DEFAULT_API = 'http://localhost:8787';
 
-// `mood` is the author's pick from moods.js. The Worker ignores it until the
-// prompt learns to use it.
+// `mood` is a stable lens ID from moods.js; the Worker resolves its sub-prompt.
 export async function writePost(text, { mood, base = DEFAULT_API, fetcher = fetch } = {}) {
   const response = await fetcher(`${base}/post`, {
     method: 'POST',
