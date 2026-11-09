@@ -1,0 +1,77 @@
+{
+  "status": "Provisional human-approved reference examples",
+  "reviewer": "Samira",
+  "feedback": "these are fine for now",
+  "examples": [
+    {
+      "articleId": "01",
+      "article": "Kate — AI agents",
+      "lens": "pickup",
+      "format": "tweet",
+      "platform": "x",
+      "post": "Are you AI-ready? Because I’d make a folder just for you.",
+      "reviewer": "Samira",
+      "date": "2026-11-09",
+      "verdict": "keep_for_now",
+      "verbatimFeedback": "these are fine for now",
+      "origin": "Codex editorial draft, not a production model run",
+      "scope": "Approval of this exact example and short nightclub-style direction; live model consistency remains unverified"
+    },
+    {
+      "articleId": "02",
+      "article": "Lenny — AI design",
+      "lens": "pickup",
+      "format": "tweet",
+      "platform": "x",
+      "post": "Are you my design brief? Because you’re anything but generic.",
+      "reviewer": "Samira",
+      "date": "2026-11-09",
+      "verdict": "keep_for_now",
+      "verbatimFeedback": "these are fine for now",
+      "origin": "Codex editorial draft, not a production model run",
+      "scope": "Approval of this exact example and short nightclub-style direction; live model consistency remains unverified"
+    },
+    {
+      "articleId": "03",
+      "article": "40 for 40 — Sue",
+      "lens": "pickup",
+      "format": "tweet",
+      "platform": "x",
+      "post": "Are you my sous chef? Because things are heating up.",
+      "reviewer": "Samira",
+      "date": "2026-11-09",
+      "verdict": "keep_for_now",
+      "verbatimFeedback": "these are fine for now",
+      "origin": "Codex editorial draft, not a production model run",
+      "scope": "Approval of this exact example and short nightclub-style direction; live model consistency remains unverified"
+    },
+    {
+      "articleId": "04",
+      "article": "Vogue — relationships",
+      "lens": "pickup",
+      "format": "tweet",
+      "platform": "x",
+      "post": "I’d soft-launch you, but you’re too good to crop out.",
+      "reviewer": "Samira",
+      "date": "2026-11-09",
+      "verdict": "keep_for_now",
+      "verbatimFeedback": "these are fine for now",
+      "origin": "Codex editorial draft, not a production model run",
+      "scope": "Approval of this exact example and short nightclub-style direction; live model consistency remains unverified"
+    },
+    {
+      "articleId": "05",
+      "article": "Pragmatic Engineer — AI coding",
+      "lens": "pickup",
+      "format": "tweet",
+      "platform": "x",
+      "post": "Are you a pull request? Because I’m ready to commit.",
+      "reviewer": "Samira",
+      "date": "2026-11-09",
+      "verdict": "keep_for_now",
+      "verbatimFeedback": "these are fine for now",
+      "origin": "Codex editorial draft, not a production model run",
+      "scope": "Approval of this exact example and short nightclub-style direction; live model consistency remains unverified"
+    }
+  ]
+}
