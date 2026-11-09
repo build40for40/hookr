@@ -2,6 +2,8 @@
 # Production values go in Cloudflare secrets: npm run wrangler -- secret put <NAME>
 # MODEL is set in wrangler.jsonc. Uncomment to try another provider:model (anthropic, openai or google) and fill in its key.
 # MODEL=
+# name:code pairs, comma separated. Make one with: npm run access-code -- <name>
+ACCESS_CODES=
 ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
 GOOGLE_GENERATIVE_AI_API_KEY=

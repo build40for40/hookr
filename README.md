@@ -10,7 +10,8 @@ Needs Node.js 24 (see `.node-version`) and an Anthropic API key.
 
 ```sh
 npm ci
-cp .dev.vars.example .dev.vars   # then fill in ANTHROPIC_API_KEY
+cp .dev.vars.example .dev.vars   # then fill in ANTHROPIC_API_KEY and ACCESS_CODES
+npm run access-code -- me        # a local code: paste its pair into ACCESS_CODES
 npm run dev
 ```
 
@@ -18,7 +19,7 @@ That starts the API on http://localhost:8787. Then:
 
 1. Open `chrome://extensions` in Chrome 116 or later and turn on **Developer mode**.
 2. Click **Load unpacked** and choose this repo's `extension/` folder.
-3. Pin Hookr from the puzzle-piece menu, open an article and click its icon. Hookr opens in the side panel, reads the page and writes a post.
+3. Pin Hookr from the puzzle-piece menu, open an article and click its icon. Hookr opens in the side panel and asks for your access code: paste the local one. Then it reads the page and writes a post.
 4. The panel stays open when you switch tabs. Hookr can only read a tab after you click its icon there, so click it again on each article you want to hook. Moving to another page on a site you already clicked on shows **Hook this page**.
 
 No build step: after changing extension files, click **Reload** on its card, then click the icon again (reloading closes the panel). Right-click inside the panel and choose **Inspect** for its console.
@@ -32,6 +33,7 @@ To check the panel's look without Chrome or the API, serve the repo (`python3 -m
 | `npm test` | Worker, extension and packaging tests |
 | `npm run check` | Tests plus a Wrangler deploy dry run (what CI runs) |
 | `npm run deploy` | Deploys the `hookr-api` Worker by hand. CI does this on every push to `main` |
+| `npm run access-code -- <name>` | Prints a fresh access code and its `name:code` pair |
 | `npm run extension:package` | Store ZIP in `dist/`, pointed at the live API |
 | `npm run extension:package:dev` | Same files, keeps localhost. Never upload it |
 
@@ -40,7 +42,16 @@ To check the panel's look without Chrome or the API, serve the repo (`python3 -m
 Deployed at https://hookr-api.40for40.workers.dev.
 
 - `GET /health`: `{ "ok": true }`
-- `POST /post` with `{ "text": "...", "mood": "calm" }`: `{ "post": "...", "excerpt": "...", "length": 0 }`. `post` is at most 280 by X's weighted count (`length`), and `excerpt` is the passage from the article that supports it, checked against the text sent. Errors are `{ "error": { "code", "message" } }`, including 422 `insufficient_source` when the page has too little to work with.
+- `POST /post` with `Authorization: Bearer <access code>` and `{ "text": "...", "mood": "calm" }`: `{ "post": "...", "excerpt": "...", "length": 0 }`. `post` is at most 280 by X's weighted count (`length`), and `excerpt` is the passage from the article that supports it, checked against the text sent. Errors are `{ "error": { "code", "message" } }`, including 401 `unauthorised` for a missing or wrong code, 429 `rate_limited` past 20 posts a minute for one person, 503 `not_configured` when no codes are set, and 422 `insufficient_source` when the page has too little to work with.
+
+### Access codes
+
+The API is for the team and Kate while we test, so `POST /post` needs a personal access code. No accounts or sign-in: the Worker secret `ACCESS_CODES` holds `name:code` pairs, comma separated, and each person pastes their code into the panel once. The Worker logs the name, never the code, on each post it writes, so Workers Logs shows who's using it, and it allows each person 20 posts a minute.
+
+- **Add someone:** `npm run access-code -- <name>` prints a fresh code and its pair. Add the pair to the full list (keep it in the team's password manager, never in the repo), run `npm run wrangler -- secret put ACCESS_CODES` and paste the whole list. Send them the code by hand.
+- **Revoke someone:** put the list back without their pair. Their next request gets a 401 and the panel asks for a code again.
+- `secret put` replaces the whole value and takes effect within seconds, with no code change or CI run. Wrangler can't show a secret's value, so the list in the password manager is the only copy.
+- **Locally:** put a pair in `ACCESS_CODES` in `.dev.vars`. With it unset, `POST /post` answers 503 `not_configured`.
 
 The base prompt is [prompts/generate-post-v1.md](prompts/generate-post-v1.md). Each mood selects a separate [lens sub-prompt](prompts/lenses/README.md), composed with the base by `worker/lenses.js`. `mood` is optional; missing or unknown IDs use Elegant. The reply format is unchanged.
 

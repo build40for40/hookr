@@ -12,6 +12,7 @@ const preview = !globalThis.chrome?.tabs;
 const params = new URLSearchParams(location.search);
 const sample = preview ? (await import('../design/sample.js')).SAMPLE : null;
 const windowId = preview ? null : (await chrome.windows.getCurrent()).id;
+const CODE_KEY = 'accessCode';
 
 let page;
 let mood = params.get('mood') ?? remembered() ?? DEFAULT_MOOD;
@@ -19,7 +20,11 @@ let attempt = 0;
 let original = '';
 let run = 0;
 let looks = 0;
+let code = preview ? null : (await chrome.storage.local.get(CODE_KEY))[CODE_KEY] ?? null;
+let screen = 'reading';
+let before = 'reading';
 
+const WRONG_CODE = "That code didn't work. Check you copied all of it, or ask the team for a fresh one.";
 const CANT_READ = "Hookr can't read this tab yet. Open an article, like a Substack post, and click the Hookr icon in your toolbar.";
 
 // ---- Moods ----------------------------------------------------------------
@@ -53,7 +58,9 @@ for (const { id, name } of MOODS) {
 // ---- Screens --------------------------------------------------------------
 
 function show(state) {
-  for (const id of ['reading', 'result', 'failed']) $(id).hidden = id !== state;
+  screen = state;
+  for (const id of ['reading', 'result', 'failed', 'access']) $(id).hidden = id !== state;
+  $('change-code').hidden = !code || !['result', 'failed'].includes(state);
 }
 
 function fail(message) {
@@ -95,6 +102,42 @@ function count() {
   $('voice').textContent = text !== original ? 'Edited by you' : found ? 'Every word is yours' : 'Check every word';
 }
 
+// ---- Access code ----------------------------------------------------------
+
+// The Worker only answers people with a code. It lives in chrome.storage.local
+// and goes out as a bearer token; the preview keeps it in memory.
+async function saveCode(value) {
+  code = value;
+  if (!preview) await (value ? chrome.storage.local.set({ [CODE_KEY]: value }) : chrome.storage.local.remove(CODE_KEY));
+}
+
+function ask(note = '', wrong = false) {
+  if (screen !== 'access') before = screen;
+  $('code').value = '';
+  $('access-note').textContent = note;
+  $('access-note').classList.toggle('error', wrong);
+  $('access-back').hidden = $('forget').hidden = !code;
+  show('access');
+  if (!preview) $('code').focus();
+}
+
+$('access-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const value = $('code').value.trim();
+  if (!value) return;
+  const changing = Boolean(code);
+  await saveCode(value);
+  if (changing) show(before);
+  else if (page) write();
+  else start();
+});
+$('access-back').addEventListener('click', () => show(before));
+$('forget').addEventListener('click', async () => {
+  await saveCode(null);
+  ask('Forgotten. Paste a code to carry on.');
+});
+$('change-code').addEventListener('click', () => ask());
+
 // ---- Reading and writing --------------------------------------------------
 
 // Reading a tab needs the activeTab grant from a click on the Hookr icon. It
@@ -111,7 +154,7 @@ async function peek() {
 }
 
 async function hook() {
-  if (!preview) return writePost(page.text, { mood });
+  if (!preview) return writePost(page.text, { mood, code });
   await new Promise(resolve => setTimeout(resolve, 900));
   const hooks = sample.hooks[mood];
   return hooks[attempt % hooks.length];
@@ -119,12 +162,16 @@ async function hook() {
 
 async function write() {
   const mine = ++run;
+  if (!code && !preview) return ask();
   show('reading');
   try {
     const post = await hook();
     if (mine === run) showPost(post);
   } catch (error) {
-    if (mine === run) fail(error.message);
+    if (mine !== run) return;
+    if (error.status !== 401) return fail(error.message);
+    await saveCode(null);
+    ask(WRONG_CODE, true);
   }
 }
 
@@ -212,6 +259,13 @@ function pin(state) {
   if (state === 'unreadable') {
     showPost(hooks[0]);
     notice('unreadable');
+  }
+  if (state === 'access') ask();
+  if (state === 'access-wrong') ask(WRONG_CODE, true);
+  if (state === 'access-change') {
+    code = 'preview-code';
+    showPost(hooks[0]);
+    ask();
   }
   if (state === 'blocked') {
     page = null;

@@ -169,7 +169,24 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
 
 .error { margin: 0; color: var(--accent-text); }
 
-.foot { padding: 10px 16px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; }
+/* The access code screen: a short note on paper, one field and a way in. */
+.access h1 { margin: 0 0 6px; font-size: 20px; font-weight: 500; line-height: 1.3; }
+.access p { margin: 0 0 14px; }
+.access input { display: block; width: 100%; margin-top: 4px; padding: 9px 12px; font: 400 16px/1.4 var(--font); letter-spacing: 0.04em; background: var(--sheet); color: var(--post-ink); border: 1px solid var(--rule); border-radius: 2px; }
+.access input:hover { border-color: var(--ink-soft); }
+.access input:focus { outline: none; border-color: var(--ink); }
+.access input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.access .note { margin: 8px 0 0; font-size: 14px; color: var(--ink-soft); }
+.access .note:empty { display: none; }
+.access .note.error { color: var(--accent-text); }
+.access .actions { margin-top: 14px; }
+.access .aside { margin: 18px 0 0; font-size: 13px; color: var(--ink-soft); }
+.access a { color: var(--accent-text); }
+.link { background: none; border: 0; padding: 0; font-size: inherit; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
+.link:hover { color: var(--ink); }
+.access .link { display: block; margin-top: 12px; font-size: 13px; }
+
+.foot { padding: 10px 16px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; gap: 12px; }
 
 .reading { padding: 36px 24px 40px; text-align: center; }
 .reading p { margin: 0 0 6px; font-size: 18px; }

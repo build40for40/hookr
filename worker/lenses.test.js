@@ -32,26 +32,31 @@ test('all lens prompts preserve the base prompt, source boundaries and reply con
   assert.equal(prompts.size, Object.keys(LENS_PROMPTS).length);
 });
 
-test('each lens reaches the model through POST /post and keeps the response contract', async () => {
+const ENV = { MODEL: 'mock:model', ACCESS_CODES: 'tester:test-code' };
+const AUTH = { Authorization: 'Bearer test-code' };
+
+test('each lens reaches the model through POST /post and keeps the response contract', async t => {
+  t.mock.method(console, 'log', () => {});
   for (const mood of Object.keys(LENS_PROMPTS)) {
     const { model, prompts } = mockModel('Post: Start small.\nSupporting excerpt: Start small.');
-    const request = new Request('http://api/post', {method:'POST', body:JSON.stringify({text:'Start small.', mood})});
-    const response = await handle(request, {MODEL:'mock:model'}, () => model);
+    const request = new Request('http://api/post', {method:'POST', headers:AUTH, body:JSON.stringify({text:'Start small.', mood})});
+    const response = await handle(request, ENV, () => model);
     assert.equal(response.status, 200, mood);
     assert.deepEqual(await response.json(), {post:'Start small.', excerpt:'Start small.', length:12});
     assert.equal(prompts[0][0].content, instructionsFor(mood));
   }
 });
 
-test('older clients and unknown lens IDs still generate; non-string IDs are rejected', async () => {
+test('older clients and unknown lens IDs still generate; non-string IDs are rejected', async t => {
+  t.mock.method(console, 'log', () => {});
   for (const mood of [undefined, 'future-lens']) {
     const {model, prompts} = mockModel('Post: Start small.\nSupporting excerpt: Start small.');
-    const response = await handle(new Request('http://api/post', {method:'POST',body:JSON.stringify({text:'Start small.', mood})}), {MODEL:'mock:model'}, () => model);
+    const response = await handle(new Request('http://api/post', {method:'POST',headers:AUTH,body:JSON.stringify({text:'Start small.', mood})}), ENV, () => model);
     assert.equal(response.status,200);
     assert.equal(prompts[0][0].content,instructionsFor());
   }
   for (const mood of [null, {}, ['calm'], 'x'.repeat(65)]) {
-    const response = await handle(new Request('http://api/post',{method:'POST',body:JSON.stringify({text:'Start small.',mood})}),{MODEL:'mock:model'}, () => {throw Error('must not call model');});
+    const response = await handle(new Request('http://api/post',{method:'POST',headers:AUTH,body:JSON.stringify({text:'Start small.',mood})}),ENV, () => {throw Error('must not call model');});
     assert.equal(response.status,400);
   }
 });
