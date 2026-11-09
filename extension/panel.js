@@ -38,32 +38,25 @@ const levelOf = id => (id === DEFAULT_MOOD ? null : fit?.[id]?.level in FITS ? f
 
 function setMood(id) {
   mood = moodFor(id).id;
-  const level = levelOf(mood);
   $('mood-line').textContent = moodFor(mood).line;
-  if (level) {
-    const name = document.createElement('span');
-    name.className = 'fit-name';
-    name.textContent = ` · ${FITS[level].name}`;
-    $('mood-line').append(name);
-  }
   for (const chip of $('moods').children) chip.setAttribute('aria-pressed', String(chip.dataset.mood === mood));
 }
 
 function chips() {
-  $('moods').replaceChildren(...ordered(fit).map(({ id, name }) => {
+  $('moods').replaceChildren(...ordered(fit).map(({ id, name, line }) => {
     const chip = document.createElement('button');
     const level = levelOf(id);
     chip.className = 'mood';
     chip.dataset.mood = id;
     if (level) {
       chip.dataset.fit = level;
-      chip.title = FITS[level].name;
       const dot = document.createElement('span');
       dot.className = 'fit';
       dot.setAttribute('aria-hidden', 'true');
       chip.append(dot);
     }
     chip.append(name);
+    chip.title = level ? `${line} ${FITS[level].name}.` : line;
     if (level) chip.setAttribute('aria-label', `${name}, ${FITS[level].name.toLowerCase()}`);
     chip.addEventListener('click', () => pick(id));
     return chip;
@@ -126,20 +119,29 @@ function showPost(post) {
   show('result');
 }
 
-// A stretch gets a quiet line above the post; a reach she chose to see keeps
-// its warning. Good fits and Pull quote say nothing.
+// Every fit message says why in plain words: the lens, this piece, and the
+// Worker's one-sentence reason. Good fits and Pull quote say nothing.
+const FALLBACK = {
+  thin: "There's only a little on the page for it to work with.",
+  none: "There isn't much on the page for it to work with.",
+};
+const why = level => fit?.[mood]?.reason?.trim() || FALLBACK[level];
+
+// A stretch gets a quiet line above the post; a poor fit she chose to see
+// keeps its warning.
 function stretch() {
   const level = levelOf(mood);
   const line = $('stretch');
   line.hidden = level !== 'thin' && level !== 'none';
   line.classList.toggle('reach', level === 'none');
   if (line.hidden) return;
+  const { name } = moodFor(mood);
   const [title, note] = level === 'thin'
-    ? ['A bit of a stretch.', 'Worth a polish before you post.']
-    : ['A reach for this page.', 'For ideas, not for posting as-is.'];
+    ? [`${name} could work, but it's a stretch for this piece.`, 'Worth a polish before you post.']
+    : [`This piece isn't a great fit for ${name}.`, 'Use it for ideas, not to post as-is.'];
   const strong = document.createElement('b');
   strong.textContent = title;
-  line.replaceChildren(strong, ` ${note}`);
+  line.replaceChildren(strong, ` ${why(level)} ${note}`);
 }
 
 // A reach: the page has little for this lens. Hookr still writes one, because
@@ -147,9 +149,8 @@ function stretch() {
 function reach() {
   const { name } = moodFor(mood);
   const instead = better(fit);
-  const reason = fit?.[mood]?.reason?.trim() || "There wasn't much on the page to build it from.";
-  $('reach-title').textContent = `${name} is a reach here`;
-  $('reach-reason').textContent = `${reason} We wrote one anyway: worth a look for ideas, not for posting as-is.`;
+  $('reach-title').textContent = `This piece isn't a great fit for ${name}`;
+  $('reach-reason').textContent = `${why('none')} We wrote one anyway. It might spark an idea, but it's not one to post as-is.`;
   $('reach-better').textContent = `Try ${instead.name}`;
   $('reach-better').dataset.mood = instead.id;
   $('reach-better').hidden = instead.id === mood;

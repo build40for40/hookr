@@ -26,9 +26,9 @@ export const moodFor = id => MOODS.find(mood => mood.id === id) ?? MOODS[0];
 // How well the page suits each lens, from POST /fit. Pull quote is never rated.
 // The mark is the second cue next to the colour, for colour-blind readers.
 export const FITS = {
-  strong: { rank: 0, name: 'Good fit' },
-  thin:   { rank: 1, name: 'A bit of a stretch' },
-  none:   { rank: 2, name: 'A reach for this page' },
+  strong: { rank: 0, name: 'Good fit for this piece' },
+  thin:   { rank: 1, name: 'Could work, with a stretch' },
+  none:   { rank: 2, name: 'Not a great fit for this piece' },
 };
 
 // Rated lenses in picker order: Pull quote first, then good fits, stretches and
