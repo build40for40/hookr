@@ -56,6 +56,10 @@ export const SAMPLE = {
     behind: [
       'Everyone’s writing about which AI bot to choose. I wanted to write about what matters on every bot: what it can see once you connect it.',
     ],
+    pickup: [
+      'Are you my calendar? Because I’d give you access on day one, but I’m keeping my inbox to myself for now.',
+      'You must be a low-risk test run, because I want to start with you before I connect everything else.',
+    ],
     dialogue: [
       '“Help me with my work.”\n\nThat’s what most of us ask an AI agent. It’s too broad to set limits on. Pick one job instead.',
     ],

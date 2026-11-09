@@ -1,4 +1,4 @@
-import { MOODS, DEFAULT_MOOD } from './moods.js';
+import { RATED_IDS } from './moods.js';
 import { readFitResponse } from './fit.js';
 
 // The store build rewrites this line to the live Worker (scripts/package-extension.mjs).
@@ -36,7 +36,7 @@ export async function rateFit(text, { code, base = DEFAULT_API, fetcher = fetch 
       body: JSON.stringify({ text }),
     });
     if (!response.ok) return null;
-    return readFitResponse(await response.json(), MOODS.filter(lens => lens.id !== DEFAULT_MOOD).map(lens => lens.id));
+    return readFitResponse(await response.json(), RATED_IDS);
   } catch {
     return null;
   }

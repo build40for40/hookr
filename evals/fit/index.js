@@ -1,4 +1,4 @@
-import { LENSES, DEFAULT_LENS } from '../../prompts/lenses/index.js';
+import { LENSES, DEFAULT_LENS, ratedIds } from '../../prompts/lenses/index.js';
 import { readFitResponse } from '../../extension/fit.js';
 
 const normalize = text => text.normalize('NFC').replace(/\s+/gu, ' ').trim();
@@ -6,19 +6,19 @@ const normalize = text => text.normalize('NFC').replace(/\s+/gu, ' ').trim();
 // Consume the exact saved /fit response used by the UI. The source snapshot is
 // mandatory: a rating from a different article must never look like this one's.
 export function sourceFitFor({ article, lens, fitAssessment, registry = LENSES, defaultLens = DEFAULT_LENS }) {
-  if (!lens || lens === defaultLens) return { status: 'not_applicable', level: null, reason: 'Pull quote and unselected lenses are not rated.' };
+  if (!lens || (Object.hasOwn(registry, lens) && !ratedIds(registry, defaultLens).includes(lens))) return { status: 'not_applicable', level: null, reason: 'Pull quote, Pick-up line and unselected lenses are not rated.' };
   if (!Object.hasOwn(registry, lens)) return { status: 'not_assessed', level: null, reason: 'Unknown lens definition.' };
   if (typeof fitAssessment?.article !== 'string' || normalize(fitAssessment.article) !== normalize(article)) {
     return { status: 'not_assessed', level: null, reason: 'A saved /fit response for this exact article is required.' };
   }
-  const fit = readFitResponse(fitAssessment.response, Object.keys(registry).filter(id => id !== defaultLens));
+  const fit = readFitResponse(fitAssessment.response, ratedIds(registry, defaultLens));
   if (!fit) return { status: 'not_assessed', level: null, reason: 'The /fit response is missing, malformed or no longer covers the current lens definitions.' };
   return { status: 'assessed', ...fit[lens] };
 }
 
 // Grade saved actual /fit responses against reference labels. Does not generate ratings.
 export function evaluateFit({ fixture, response, reasonReviews = {}, registry = LENSES, defaultLens = DEFAULT_LENS }) {
-  const ids = Object.keys(registry).filter(id => id !== defaultLens);
+  const ids = ratedIds(registry, defaultLens);
   const fit = readFitResponse(response, ids);
   const covered = Boolean(fit);
   const checks = [{ id: 'complete_coverage', status: covered ? 'pass' : 'fail' }];

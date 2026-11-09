@@ -1,0 +1,2 @@
+// Lens sub-prompt only. Shared accuracy and output rules live in worker/lenses.js.
+export default "Turn the article's central idea into one playful, cheesy pick-up line, the kind you'd hear at a bar, built on a specific detail, phrase or point from ARTICLE DATA. It should make a reader smile and still tell them what the piece is about. Flirty and witty, never crude, sexual, mean or demeaning, and never about anyone's body. The joke framing is yours; every fact, name or detail it mentions must come from the article. One line, no hashtags, emoji or explanation.";

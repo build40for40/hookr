@@ -43,7 +43,7 @@ const TRACED = 'Everything here comes from this page. No fakes.';
 
 // Every page opens on Pull quote, her words exactly. The other lenses are rated
 // for fit once the page is read: good fits first, reaches last and quiet.
-const levelOf = id => (id === DEFAULT_MOOD ? null : fit?.[id]?.level in FITS ? fit[id].level : null);
+const levelOf = id => (id === DEFAULT_MOOD || moodFor(id).rated === false ? null : fit?.[id]?.level in FITS ? fit[id].level : null);
 
 function setMood(id) {
   mood = moodFor(id).id;
@@ -52,13 +52,15 @@ function setMood(id) {
 }
 
 function chips() {
-  $('moods').replaceChildren(...ordered(fit).map(({ id, name, line }) => {
+  $('moods').replaceChildren(...ordered(fit).map(({ id, name, line, rated }) => {
     const chip = document.createElement('button');
     const level = levelOf(id);
+    const party = rated === false;
     chip.className = 'mood';
     chip.dataset.mood = id;
-    if (level) {
-      chip.dataset.fit = level;
+    if (party) chip.dataset.fit = 'party';
+    if (level || party) {
+      if (level) chip.dataset.fit = level;
       const dot = document.createElement('span');
       dot.className = 'fit';
       dot.setAttribute('aria-hidden', 'true');
@@ -352,6 +354,7 @@ async function write({ hold = false } = {}) {
   held = null;
   // Access codes are off for now; restore this to ask for one before writing.
   // if (!code && !preview) return ask();
+  $('reading-line').textContent = moodFor(mood).loading ?? format.loading;
   if (!hold) show('reading');
   try {
     const post = await hook();
