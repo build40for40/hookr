@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hookr: the post is already in your book</title>
+  <meta name="description" content="Hookr reads a page you wrote and finds the line worth posting. One post for X, in your own words. Nothing invented.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f4eee3;
+      --paper-deep: #ebe3d4;
+      --ink: #1e1b17;
+      --ink-soft: #5b544a;
+      --rule: #d6ccb9;
+      --red: #8a2a22;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--paper); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font: 400 1.25rem/1.55 "Newsreader", Georgia, serif;
+      font-optical-sizing: auto;
+      -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 42rem; margin: 0 auto; padding: 4.5rem 1.25rem 3rem; }
+    a { color: inherit; text-decoration-color: var(--rule); text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-color: var(--red); }
+    .mark { display: flex; align-items: center; gap: 0.6rem; font-weight: 500; font-size: 1.3rem; letter-spacing: 0.01em; }
+    .mark img { width: 2rem; height: 2rem; }
+    h1 { font-weight: 400; font-size: clamp(2.4rem, 7vw, 3.6rem); line-height: 1.08; letter-spacing: -0.015em; margin: 4rem 0 1.5rem; }
+    h1 em { color: var(--red); }
+    .lede { color: var(--ink-soft); margin: 0 0 2.25rem; max-width: 34rem; }
+    .cta { display: inline-block; background: var(--ink); color: var(--paper); text-decoration: none; padding: 0.8rem 1.4rem; font-size: 1.1rem; border-radius: 2px; }
+    .cta:hover { background: var(--red); }
+    .cta-note { display: block; margin-top: 0.75rem; font-size: 0.95rem; color: var(--ink-soft); }
+    .label { font-variant: all-small-caps; letter-spacing: 0.08em; font-size: 1rem; color: var(--ink-soft); }
+    hr { border: 0; border-top: 1px solid var(--rule); margin: 4rem 0; }
+
+    /* The example: a page of the author's book, and the post Hookr found in it. */
+    .page { background: #fbf8f2; border: 1px solid var(--rule); padding: 2rem 2rem 1.25rem; font-size: 1.1rem; box-shadow: 6px 6px 0 var(--paper-deep); }
+    .page p { margin: 0 0 1rem; text-indent: 1.5em; }
+    .page p:first-of-type { text-indent: 0; }
+    .page mark { background: none; color: inherit; box-shadow: inset 0 -0.45em 0 rgba(138, 42, 34, 0.16); }
+    .folio { text-align: center; font-size: 0.85rem; color: var(--ink-soft); margin-top: 1.25rem; }
+    .arrow { text-align: center; color: var(--red); margin: 1.25rem 0; font-size: 1.1rem; }
+    .post { border-left: 2px solid var(--red); padding: 0.25rem 0 0.25rem 1.25rem; }
+    .post blockquote { margin: 0.5rem 0; font-size: 1.35rem; line-height: 1.4; }
+    .post .meta { font-size: 0.95rem; color: var(--ink-soft); }
+
+    ol { list-style: none; counter-reset: step; padding: 0; margin: 1.5rem 0 0; }
+    ol li { counter-increment: step; display: grid; grid-template-columns: 2.25rem 1fr; padding: 0.9rem 0; border-top: 1px solid var(--rule); }
+    ol li::before { content: counter(step, lower-roman) "."; color: var(--red); font-style: italic; }
+    .promise p { margin: 0 0 1rem; }
+    footer { font-size: 0.95rem; color: var(--ink-soft); padding-top: 1.5rem; border-top: 1px solid var(--rule); margin-top: 4rem; }
+    #install ol li::before { content: counter(step) "."; font-style: normal; }
+    code { font-size: 0.9em; background: var(--paper-deep); padding: 0.05em 0.3em; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="mark"><img src="icon.svg" alt="">Hookr</div>
+
+    <h1>The post is already in your book. <em>Hookr finds it.</em></h1>
+    <p class="lede">Open a page you wrote, like a Substack essay or a chapter, and Hookr pulls out the one line worth posting. One post for X, in your words, under 280 characters. Nothing invented.</p>
+    <a class="cta" href="#install">Add Hookr to Chrome</a>
+    <span class="cta-note">Free for authors. Firefox next.</span>
+
+    <hr>
+
+    <p class="label">What it does with a page</p>
+    <div class="page">
+      <p>I used to think I had nothing to say. <mark>Writer’s block isn’t a shortage of ideas. It’s a surplus of judgement, arriving before the words have had a chance to be wrong.</mark> The cure is not inspiration but permission.</p>
+      <p>So I gave myself a rule: the first draft is allowed to be terrible, and nobody is allowed to read it, including me.</p>
+      <div class="folio">— 41 —</div>
+    </div>
+    <div class="arrow" aria-hidden="true">↓</div>
+    <div class="post">
+      <span class="label">Your post for X</span>
+      <blockquote>Writer’s block isn’t a shortage of ideas. It’s a surplus of judgement, arriving before the words have had a chance to be wrong.</blockquote>
+      <span class="meta">127 of 280 characters · every word from page 41</span>
+    </div>
+
+    <hr>
+
+    <section class="promise">
+      <p class="label">Our promise</p>
+      <p>Hookr only quotes and trims. It never adds a thought you didn’t have, and it shows you exactly which sentence each post came from. If something can’t be traced back to your page, it doesn’t go out.</p>
+      <p>Publishers rarely market the backlist. Your best lines are sitting in it.</p>
+    </section>
+
+    <hr>
+
+    <section>
+      <p class="label">How it works</p>
+      <ol>
+        <li><span>Open something you wrote, in Chrome.</span></li>
+        <li><span>Click the hook in your toolbar.</span></li>
+        <li><span>Read the post, check where it came from, and copy it to X.</span></li>
+      </ol>
+    </section>
+
+    <hr>
+
+    <section id="install">
+      <p class="label">Install</p>
+      <p>Hookr is on its way to the Chrome Web Store. Until it lands, you can load it yourself in a minute:</p>
+      <ol>
+        <li><span>Download the extension and unzip it.</span></li>
+        <li><span>Open <code>chrome://extensions</code> and turn on Developer mode.</span></li>
+        <li><span>Click Load unpacked and choose the folder.</span></li>
+      </ol>
+    </section>
+
+    <footer>
+      Made in a day for Kate, on <a href="https://build40for40.com">40 for 40</a>. Day 6 of 40.
+    </footer>
+  </main>
+</body>
+</html>
