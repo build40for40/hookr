@@ -11,13 +11,13 @@ import { evaluateOutput } from './evals/global/index.js';
 const report = evaluateOutput({
   article: sourceSnapshot,
   output: generatedResponse, // {post, excerpt, posts?}
-  format: 'tweet', platform: 'x', lens: 'calm', promptVersion: 'git-commit',
+  format: 'tweet', platform: 'x', lens: 'story', promptVersion: 'git-commit',
   judgments: reviewerAssessment,
   now: '2026-11-09T12:00:00Z',
 });
 ```
 
-Review against the exact source and selected lens instructions, not a hardcoded list of six lenses. Score each criterion **0: fails; 1: acceptable; 2: strong**, with a reason and `reviewer` identity (human or exact judge model). Missing assessments remain `not_assessed`. Any deterministic or editorial failure fails readiness; missing required review gives `needs_review`. Trend assessment is optional for evergreen posts. Set `trendRequested: true` for timely mode: missing evidence then gives `needs_review`, and poor trend alignment fails.
+Review against the exact source and selected lens instructions, not a hardcoded number of lenses. The current agreed definitions are tracked in Superthread cards 230 (decision record) and 224 (Lawrence). `lens` resolves through the shared `LENSES` registry; reports include a `lensDefinition` snapshot of its stable ID, current label and exact instructions. Send that snapshot to the judge. Unknown IDs fail `known_lens` and keep `lens_fit` unassessed; they never silently evaluate the default style. Use a trusted historical `lensRegistry` when replaying an older definition. Score each criterion **0: fails; 1: acceptable; 2: strong**, with a reason and `reviewer` identity (human or exact judge model). Missing assessments remain `not_assessed`. Any deterministic or editorial failure fails readiness; missing required review gives `needs_review`. Trend assessment is optional for evergreen posts. Set `trendRequested: true` for timely mode: missing evidence then gives `needs_review`, and poor trend alignment fails.
 
 | Criterion | Review question |
 | --- | --- |
@@ -48,3 +48,5 @@ Supply `trendSignals: [{platform, url, publishedAt, observedAt, observation, evi
 ## Run records
 
 Save source snapshot/fixture ID, prompt and lens commit, exact model ID, settings, timestamp, format/platform, raw response, report, reviewer and claim mappings for every run. Never save credentials. Compare criterion pass rates across repeated runs and models, not only an average. Preserve failures and abstentions; don't replace them with successful retries. Include insufficient source, embedded malicious instructions, false numbers, uncertain claims, wrong lens and irrelevant trend signals in the regression corpus. Live model evaluation remains to be run; unit tests do not measure generation quality.
+
+The current categories are post shapes, not tones. Evaluate Story against an actual event; Confession against an explicit author admission; Behind the page against a stated writing motive or process; Dialogue against exact source speech. Never fill missing material with an invented experience or motive. Pull quote must stay verbatim; longer-format interplay needs explicit review. This output evaluator does not measure `/fit` rating accuracy or reason quality; reference fixtures and saved-response comparisons live in `evals/fit/`, and the route is implemented in `worker/fit.js`; live calibration remains pending under card 230.
