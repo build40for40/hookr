@@ -11,12 +11,13 @@ test('writePost sends the text to the Worker and surfaces its errors', async () 
     fetcher: async (url, init) => { asked = { url, body: JSON.parse(init.body) }; return reply({ post: 'P' }); },
   });
   assert.deepEqual(asked, { url: `${DEFAULT_API}/post`, body: { text: 'Some words.' } });
-  assert.equal(post, 'P');
-  await writePost('Some words.', {
-    mood: 'story',
-    fetcher: async (url, init) => { asked = JSON.parse(init.body); return reply({ post: 'P' }); },
+  assert.deepEqual(post, { post: 'P' });
+  const thread = await writePost('Some words.', {
+    mood: 'story', format: 'thread', platform: 'threads',
+    fetcher: async (url, init) => { asked = JSON.parse(init.body); return reply({ post: 'A\n\nB', posts: ['A', 'B'] }); },
   });
-  assert.deepEqual(asked, { text: 'Some words.', mood: 'story' });
+  assert.deepEqual(asked, { text: 'Some words.', mood: 'story', format: 'thread', platform: 'threads' });
+  assert.deepEqual(thread.posts, ['A', 'B']);
   await assert.rejects(writePost('x', { fetcher: async () => reply({ error: { message: 'Too long.' } }, 413) }), /Too long\./);
 });
 

@@ -64,7 +64,7 @@ export function evaluateOutput({ article, output, format = 'tweet', platform = '
     if (!(Number.isFinite(wpm) && wpm > 0)) throw new TypeError('wordsPerMinute must be positive');
     const seconds = words / wpm * 60;
     checks.push(check('estimated_duration', seconds >= 60 && seconds <= 120, `${seconds.toFixed(1)}s at ${wpm} words/minute; estimate only, time a spoken read before publishing`));
-  } else if (!['essay', 'caption'].includes(kind)) checks.push(check('known_format', false, `Unknown format: ${format}`));
+  } else if (!['essay', 'caption', 'feed'].includes(kind)) checks.push(check('known_format', false, `Unknown format: ${format}`));
   if (constraints.maxCharacters !== undefined) checks.push(check('configured_length', chars(post) <= constraints.maxCharacters, `Configured editorial limit ${constraints.maxCharacters}`));
 
   const subjective = CRITERIA.map(id => {

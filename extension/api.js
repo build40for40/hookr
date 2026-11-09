@@ -11,16 +11,17 @@ export class ApiError extends Error {
   }
 }
 
-// `mood` is a stable lens ID from moods.js; the Worker resolves its sub-prompt.
-export async function writePost(text, { mood, code, base = DEFAULT_API, fetcher = fetch } = {}) {
+// `mood` is a stable lens ID from moods.js, `format` and `platform` stable IDs
+// from formats.js. Resolves to the Worker's reply: `post`, plus `posts` for a thread.
+export async function writePost(text, { mood, format, platform, code, base = DEFAULT_API, fetcher = fetch } = {}) {
   const response = await fetcher(`${base}/post`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(code && { Authorization: `Bearer ${code}` }) },
-    body: JSON.stringify(mood ? { text, mood } : { text }),
+    body: JSON.stringify({ text, ...(mood && { mood }), ...(format && { format }), ...(platform && { platform }) }),
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new ApiError(body.error?.message ?? `The server said ${response.status}.`, response.status);
-  return body.post;
+  return body;
 }
 
 // How well the page suits each lens, so the picker can colour them before the
