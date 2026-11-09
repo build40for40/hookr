@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en-GB">
+<html lang="en-GB" data-mood="elegant">
 <head>
   <meta charset="utf-8">
   <title>Hookr</title>
@@ -10,31 +10,41 @@
     <img src="icons/icon-32.png" alt="">Hookr<span class="source" id="source"></span>
   </header>
 
-  <section id="reading" class="reading">
-    <p>Reading your page…</p>
-    <small>Looking for the line worth posting.</small>
-    <div class="lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-  </section>
+  <div class="moods" id="moods" role="group" aria-label="Mood"></div>
+  <p class="mood-line" id="mood-line"></p>
 
-  <section id="result" class="body" hidden>
-    <span class="label">Your post for X</span>
-    <div class="post" id="post"></div>
-    <div class="count"><span><b id="chars">0</b> / 280</span><span>Every word is yours</span></div>
+  <div aria-live="polite">
+    <section id="reading" class="reading">
+      <p>Reading your page…</p>
+      <small>Looking for the line worth posting.</small>
+      <div class="lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    </section>
 
-    <div class="actions">
-      <button class="primary" id="copy">Copy for X</button>
-      <button class="quiet" id="again">Another hook</button>
-    </div>
-  </section>
+    <section id="result" class="body" hidden>
+      <span class="label" id="post-label">Your post for X</span>
+      <div class="post" id="post" role="textbox" aria-multiline="true" aria-labelledby="post-label" contenteditable="plaintext-only"></div>
+      <div class="count" id="count"><span><b id="chars">0</b> / 280<span id="over"></span></span><span id="voice"></span></div>
 
-  <section id="failed" class="body" hidden>
-    <p class="error" id="error"></p>
-    <div class="actions">
-      <button class="quiet" id="retry">Try again</button>
-    </div>
-  </section>
+      <div class="trace" id="trace">
+        <span class="label" id="trace-label"></span><br>
+        <mark id="excerpt"></mark> <span class="where" id="where"></span>
+      </div>
 
-  <footer class="foot"><span id="words"></span><span>Nothing invented</span></footer>
+      <div class="actions">
+        <button class="primary" id="copy">Copy for X</button>
+        <button class="quiet" id="again">Another hook</button>
+      </div>
+    </section>
+
+    <section id="failed" class="body" hidden>
+      <p class="error" id="error"></p>
+      <div class="actions">
+        <button class="quiet" id="retry">Try again</button>
+      </div>
+    </section>
+  </div>
+
+  <footer class="foot"><span id="words"></span><span id="promise"></span></footer>
 
   <script type="module" src="popup.js"></script>
 </body>

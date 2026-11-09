@@ -1,11 +1,108 @@
-:root {
+/* Each mood is one set of tokens. Elegant is the Hookr brand: paper, ink and red ink.
+   --accent decorates (rules, marks, the reading lines); --accent-text is accent you can read. */
+:root,
+[data-mood="elegant"] {
   color-scheme: light;
   --paper: #f4eee3;
   --sheet: #fbf8f2;
   --ink: #1e1b17;
+  --post-ink: var(--ink);
   --ink-soft: #5b544a;
   --rule: #d6ccb9;
-  --red: #8a2a22;
+  --accent: #8a2a22;
+  --accent-text: #8a2a22;
+  --button: var(--ink);
+  --button-ink: var(--paper);
+  --button-hover: var(--accent);
+  --font: "Newsreader", Georgia, "Times New Roman", serif;
+  --post-font: var(--font);
+  --post-weight: 400;
+  --post-style: normal;
+  --post-shadow: none;
+}
+
+[data-mood="calm"] {
+  --paper: #e9f0f7;
+  --sheet: #f7fafd;
+  --ink: #13263a;
+  --ink-soft: #4a5e72;
+  --rule: #c5d4e3;
+  --accent: #2d5b88;
+  --accent-text: #2d5b88;
+}
+
+[data-mood="light"] {
+  --paper: #fff3c2;
+  --sheet: #fffbe8;
+  --ink: #2b2410;
+  --ink-soft: #66561f;
+  --rule: #ead58a;
+  --accent: #e07a1f;
+  --accent-text: #9a4505;
+  --button-hover: #9a4505;
+  --font: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --post-weight: 500;
+}
+
+[data-mood="serious"] {
+  --paper: #e8eaee;
+  --sheet: #f7f8fa;
+  --ink: #0f172a;
+  --ink-soft: #475569;
+  --rule: #c8ced8;
+  --accent: #1e3a5f;
+  --accent-text: #1e3a5f;
+  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --post-weight: 500;
+}
+
+[data-mood="dramatic"] {
+  color-scheme: dark;
+  --paper: #120e10;
+  --sheet: #1d171a;
+  --ink: #f4ede7;
+  --ink-soft: #b8aca6;
+  --rule: #3b3035;
+  --accent: #e8475d;
+  --accent-text: #ff8597;
+  --button: #f4ede7;
+  --button-ink: #120e10;
+  --button-hover: #e8475d;
+  --post-style: italic;
+}
+
+[data-mood="beast"] {
+  --paper: #c8102e;
+  --sheet: #ffffff;
+  --ink: #ffffff;
+  --post-ink: #111111;
+  --ink-soft: #ffe3e8;
+  --rule: #e2576d;
+  --accent: #ffd400;
+  --accent-text: #ffffff;
+  --button: #ffd400;
+  --button-ink: #111111;
+  --button-hover: #ffffff;
+  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --post-font: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+  --post-weight: 900;
+}
+
+[data-mood="tiktok"] {
+  color-scheme: dark;
+  --paper: #000000;
+  --sheet: #121214;
+  --ink: #ffffff;
+  --ink-soft: #a8a8b0;
+  --rule: #2c2c31;
+  --accent: #25f4ee;
+  --accent-text: #25f4ee;
+  --button: #fe2c55;
+  --button-ink: #000000;
+  --button-hover: #25f4ee;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --post-weight: 600;
+  --post-shadow: -1px -1px 0 rgba(37, 244, 238, 0.55), 1px 1px 0 rgba(254, 44, 85, 0.55);
 }
 
 * { box-sizing: border-box; }
@@ -15,9 +112,12 @@ body {
   width: 360px;
   background: var(--paper);
   color: var(--ink);
-  font: 400 15px/1.5 "Newsreader", Georgia, serif;
+  font: 400 15px/1.5 var(--font);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Fade between moods only once the popup has drawn, so it never opens mid-fade. */
+.ready body { transition: background-color 0.25s ease, color 0.25s ease; }
 
 [hidden] { display: none !important; }
 
@@ -25,25 +125,46 @@ body {
 .bar img { width: 22px; height: 22px; }
 .bar .source { margin-left: auto; font-weight: 400; font-size: 13px; color: var(--ink-soft); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.body { padding: 16px; }
+/* The mood picker. Each chip carries data-mood too, so it wears its own mood's
+   paper, ink and type: a preview of what it switches to. --ring is the popup's ink. */
+.moods { --ring: var(--ink); display: flex; gap: 6px; overflow-x: auto; padding: 12px 16px 2px; scrollbar-width: none; }
+.moods::-webkit-scrollbar { display: none; }
+.mood { flex: none; font: 500 13px/1.4 var(--font); padding: 4px 11px; border-radius: 999px; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); white-space: nowrap; margin: 2px 0; }
+.mood:hover { border-color: var(--accent); }
+.mood[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--ring); }
+.mood-line { margin: 0; padding: 8px 16px 0; font-size: 13px; font-style: italic; color: var(--ink-soft); }
+
+.body { padding: 14px 16px 16px; }
 .label { font-variant: all-small-caps; letter-spacing: 0.08em; font-size: 13px; color: var(--ink-soft); }
 
-.post { background: var(--sheet); border: 1px solid var(--rule); padding: 14px 16px; margin: 6px 0 4px; font-size: 18px; line-height: 1.4; white-space: pre-wrap; }
+.post { background: var(--sheet); color: var(--post-ink); border: 1px solid var(--rule); padding: 14px 16px; margin: 6px 0 4px; font: var(--post-style) var(--post-weight) 18px/1.4 var(--post-font); text-shadow: var(--post-shadow); white-space: pre-wrap; outline: none; cursor: text; }
+.post:hover { border-color: var(--ink-soft); }
+.post:focus { border-color: var(--ink); }
 .count { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); }
 .count b { font-weight: 500; color: var(--ink); }
+.count.over, .count.over b { color: var(--accent-text); font-weight: 600; }
+
+/* Where the post came from, or a flag when it isn't word for word. */
+.trace { margin-top: 16px; padding-left: 12px; border-left: 2px solid var(--accent); font-size: 14px; color: var(--ink-soft); }
+.trace mark { background: none; color: var(--ink); box-shadow: inset 0 -0.45em 0 color-mix(in srgb, var(--accent) 28%, transparent); }
+.trace .where { white-space: nowrap; }
+.trace.flagged { border-left-style: dashed; }
+.trace.flagged .label, .trace.flagged .where { color: var(--accent-text); }
 
 .actions { display: flex; gap: 8px; margin-top: 18px; }
 button { font: inherit; font-size: 15px; cursor: pointer; padding: 8px 14px; border-radius: 2px; }
-.primary { background: var(--ink); color: var(--paper); border: 1px solid var(--ink); flex: 1; }
-.primary:hover { background: var(--red); border-color: var(--red); }
+button:focus-visible, .post:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:disabled { cursor: not-allowed; opacity: 0.45; }
+.primary { background: var(--button); color: var(--button-ink); border: 1px solid var(--button); flex: 1; font-weight: 500; }
+.primary:hover:not(:disabled) { background: var(--button-hover); border-color: var(--button-hover); }
 .quiet { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
-.quiet:hover { border-color: var(--ink); }
+.quiet:hover:not(:disabled) { border-color: var(--ink); }
 
-.error { margin: 0; color: var(--red); }
+.error { margin: 0; color: var(--accent-text); }
 
 .foot { padding: 10px 16px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; }
 
-.reading { padding: 40px 24px 44px; text-align: center; }
+.reading { padding: 36px 24px 40px; text-align: center; }
 .reading p { margin: 0 0 6px; font-size: 18px; }
 .reading small { color: var(--ink-soft); font-size: 14px; }
 .lines { margin: 22px auto 0; width: 200px; }
@@ -51,5 +172,5 @@ button { font: inherit; font-size: 15px; cursor: pointer; padding: 8px 14px; bor
 .lines span:nth-child(2) { width: 88%; animation-delay: 0.2s; }
 .lines span:nth-child(3) { width: 94%; animation-delay: 0.4s; }
 .lines span:nth-child(4) { width: 60%; animation-delay: 0.6s; }
-@keyframes read { 0% { background: var(--rule); } 50% { background: var(--red); } 100% { background: var(--rule); } }
-@media (prefers-reduced-motion: reduce) { .lines span { animation: none; } }
+@keyframes read { 0% { background: var(--rule); } 50% { background: var(--accent); } 100% { background: var(--rule); } }
+@media (prefers-reduced-motion: reduce) { .lines span, body { animation: none; transition: none; } }

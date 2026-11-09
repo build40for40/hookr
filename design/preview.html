@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hookr popup board</title>
+  <style>
+    body { margin: 0; background: #d9d4cb; font: 400 15px/1.5 "Newsreader", Georgia, serif; color: #1e1b17; }
+    header, .grid, h2 { max-width: 1240px; margin: 0 auto; padding-left: 16px; padding-right: 16px; }
+    header { padding-top: 32px; }
+    h1 { font-size: 24px; font-weight: 500; margin: 0 0 4px; }
+    h2 { font-size: 18px; font-weight: 500; padding-top: 24px; }
+    header p { margin: 0; color: #5b544a; max-width: 760px; }
+    code { font-size: 13px; }
+    .grid { display: flex; flex-wrap: wrap; gap: 28px; padding-top: 12px; padding-bottom: 16px; align-items: flex-start; }
+    figure { margin: 0; }
+    figcaption { font-size: 13px; color: #5b544a; margin-bottom: 8px; }
+    iframe { display: block; width: 362px; height: 480px; border: 1px solid #d6ccb9; box-shadow: 0 10px 30px rgba(30, 27, 23, 0.18); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hookr popup board</h1>
+    <p>Every frame is the real <code>extension/popup.html</code>, running on Kate Marshall's article with sample posts instead of the API. Edit <code>extension/popup.css</code> or <code>popup.js</code> and refresh. The first frame is live: switch moods, try Another hook, edit the post.</p>
+  </header>
+
+  <h2>Live, and every screen</h2>
+  <div class="grid" id="screens"></div>
+
+  <h2>Every mood</h2>
+  <div class="grid" id="moods"></div>
+
+  <script type="module">
+    import { MOODS } from '../extension/moods.js';
+
+    const frame = (where, caption, src) => {
+      const figure = document.createElement('figure');
+      figure.innerHTML = `<figcaption></figcaption><iframe title=""></iframe>`;
+      figure.querySelector('figcaption').textContent = caption;
+      const iframe = figure.querySelector('iframe');
+      iframe.title = caption;
+      iframe.src = src;
+      // Grow each frame to fit its popup, as Chrome does with the real one.
+      iframe.addEventListener('load', () => {
+        const body = iframe.contentDocument.body;
+        const fit = () => { iframe.style.height = `${body.scrollHeight}px`; };
+        new ResizeObserver(fit).observe(body);
+        fit();
+      });
+      document.getElementById(where).append(figure);
+    };
+
+    const popup = '../extension/popup.html';
+    frame('screens', 'Live', `${popup}?mood=elegant`);
+    frame('screens', 'Reading the page', `${popup}?state=reading&mood=elegant`);
+    frame('screens', 'Not word for word: flagged', `${popup}?state=drafted&mood=elegant`);
+    frame('screens', 'Edited past 280', `${popup}?state=over&mood=elegant`);
+    frame('screens', "Couldn't reach the API", `${popup}?state=failed&mood=elegant`);
+    for (const { id, name } of MOODS) frame('moods', name, `${popup}?state=result&mood=${id}`);
+  </script>
+</body>
+</html>

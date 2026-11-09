@@ -6,12 +6,12 @@ An inventory for writing this app's section of https://build40for40.com/privacy/
 
 - **Permissions:** `activeTab`, `scripting` and one host permission, the Hookr service. No `storage`, `tabs`, cookies, history or always-on content scripts.
 - **Pages read:** only the tab the user is on, and only when they click the toolbar button. It copies the visible text of the article (`extension/page.js`); the title and URL stay in the popup for its header.
-- **Stored locally:** nothing. Posts shown in the popup are gone when it closes.
+- **Stored locally:** the mood the author last picked (one word, such as `calm`, in the popup's own `localStorage`). Posts shown in the popup are gone when it closes.
 - **Analytics or tracking code:** none.
 
 ## What it sends to the Hookr service (Cloudflare Worker)
 
-- `POST /post` with the article text only. No title, URL, user id or cookies.
+- `POST /post` with the article text and the picked mood (one word, such as `calm`). No title, URL, user id or cookies.
 - **Not sent:** browsing history, other tabs, anything typed by the user.
 
 ## Third parties
