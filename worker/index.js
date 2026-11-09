@@ -1,18 +1,26 @@
+import { bearer, parseCodes, personFor } from './access.js';
 import { InsufficientSourceError, MAX_TEXT, modelFor, NoValidPostError, writePost } from './post.js';
 
-// CORS allows any origin: requests never carry cookies.
+// CORS allows any origin: requests carry an access code header, never cookies.
 const headers = {
   'Content-Type': 'application/json; charset=utf-8',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Cache-Control': 'no-store',
   'X-Content-Type-Options': 'nosniff'
 };
-const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers });
-const error = (code, message, status) => json({ error: { code, message } }, status);
+const json = (body, status = 200, extra = {}) => new Response(JSON.stringify(body), { status, headers: { ...headers, ...extra } });
+const error = (code, message, status, extra) => json({ error: { code, message } }, status, extra);
 
 async function post(request, env, model) {
+  const codes = parseCodes(env.ACCESS_CODES);
+  if (!codes.length) return error('not_configured', "Access codes aren't set up on the server.", 503);
+  const person = await personFor(bearer(request), codes);
+  if (!person) return error('unauthorised', "That access code didn't work.", 401, { 'WWW-Authenticate': 'Bearer' });
+  const limit = await env.POSTS_PER_PERSON?.limit({ key: person });
+  if (limit && !limit.success) return error('rate_limited', "That's a lot of hooks in one minute. Give it a moment.", 429, { 'Retry-After': '60' });
+
   const body = await request.json().catch(() => null);
   const text = typeof body?.text === 'string' ? body.text.trim() : '';
   if (!text) return error('bad_request', 'Send JSON with a "text" field.', 400);
@@ -21,7 +29,9 @@ async function post(request, env, model) {
   if (!env.MODEL) return error('not_configured', 'No model is set on the server.', 503);
 
   try {
-    return json(await writePost(model(), text, { mood: body.mood }));
+    const written = await writePost(model(), text, { mood: body.mood });
+    console.log({ event: 'post', person, mood: body.mood ?? null });
+    return json(written);
   } catch (cause) {
     if (cause instanceof InsufficientSourceError) {
       return error('insufficient_source', "There isn't enough in this page to write a post from.", 422);

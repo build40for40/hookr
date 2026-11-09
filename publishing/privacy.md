@@ -4,15 +4,15 @@ An inventory for writing this app's section of https://build40for40.com/privacy/
 
 ## What the extension does on the device
 
-- **Permissions:** `activeTab`, `scripting`, `sidePanel` and one host permission, the Hookr service. No `storage`, `tabs`, cookies, history, optional host permissions or always-on content scripts. The background service worker only opens the side panel on a toolbar click; it reads nothing.
+- **Permissions:** `activeTab`, `scripting`, `sidePanel`, `storage` and one host permission, the Hookr service. No `tabs`, cookies, history, optional host permissions or always-on content scripts. The background service worker only opens the side panel on a toolbar click; it reads nothing.
 - **Pages read:** only a tab where the user clicked the toolbar button, through Chrome's `activeTab` grant, which ends when that tab leaves the site. It copies the visible text of the article (`extension/page.js`); the title and URL stay in the side panel for its header.
 - **Re-reading while the panel is open:** when the author switches tab or the tab loads another page, the panel tries to read the active tab again on the device, to offer "Hook this page". That only works on a tab the user already clicked the button on, and nothing leaves the device until the author asks for a post. The panel listens to Chrome's tab events, which without the `tabs` permission carry no URLs or titles for other tabs.
-- **Stored locally:** the mood the author last picked (one word, such as `calm`, in the panel's own `localStorage`). Posts shown in the panel are gone when it closes.
+- **Stored locally:** the author's Hookr access code, in `chrome.storage.local`, until they choose **Forget my code** or the service rejects it, and the mood they last picked (one word, such as `calm`, in the panel's own `localStorage`). Posts shown in the panel are gone when it closes. Neither is synced to other devices.
 - **Analytics or tracking code:** none.
 
 ## What it sends to the Hookr service (Cloudflare Worker)
 
-- `POST /post` with the article text and the picked mood (one word, such as `calm`). No title, URL, user id or cookies.
+- `POST /post` with the article text, the picked mood (one word, such as `calm`) and the author's access code in the `Authorization` header. No title, URL or cookies.
 - **Not sent:** browsing history, other tabs, anything typed by the user.
 
 ## Third parties
@@ -21,8 +21,8 @@ An inventory for writing this app's section of https://build40for40.com/privacy/
 
 ## Open before publishing
 
-1. **Cloudflare logging.** Observability is on in `wrangler.jsonc`, and the Worker logs errors from the Claude call. Check what lands in Workers Logs (request bodies aren't logged by the code) and record it. Don't promise a Cloudflare retention period.
-2. **Retention and deletion:** the Worker stores nothing today. Keep it that way or update this file.
+1. **Cloudflare logging.** Observability is on in `wrangler.jsonc`. The Worker logs errors from the Claude call, and for each post it writes, the name that goes with the access code (such as `kate`) and the mood. It never logs the code. Check what lands in Workers Logs (request bodies aren't logged by the code) and record it. Don't promise a Cloudflare retention period.
+2. **Retention and deletion:** the Worker stores nothing today, beyond Cloudflare's per-person rate limit counter, keyed by that name, which lasts a minute. Access codes live in a Worker secret. Keep it that way or update this file.
 3. **Pages the user doesn't own:** the extension reads whatever page the user points it at. Decide what the notice says about that.
 
 Don't write "we collect no data" or "everything stays on your device": page text leaves the device by design.

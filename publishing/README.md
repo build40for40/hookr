@@ -43,7 +43,7 @@ unzip -p dist/hookr-chrome-0.1.0.zip manifest.json
 4. **Store listing:** paste from `store-listing.md`. Upload the 128px icon and at least one real 1280×800 screenshot of the installed extension (see `testing.md`). No mockups or concept images.
 5. **Privacy:** paste the single purpose, permission reasons and data answers from `store-listing.md`, and the privacy policy URL once the site has a section for this app.
 6. **Distribution:** public or unlisted, free, all regions.
-7. **Test instructions:** from `store-listing.md`. Reviewers need a working live API.
+7. **Test instructions:** from `store-listing.md`. Reviewers need a working live API and their own access code: make a `chrome-review` code as `store-listing.md` says, and revoke it once the review is done.
 8. Submit with **manual publishing**, so we choose when it goes live.
 9. After approval: publish, install from the store on a clean profile and repeat `testing.md` against it.
 
@@ -52,6 +52,7 @@ Later versions: bump `version`, build, upload to the same item. Never create a s
 ## Blockers before submitting
 
 - [ ] The live Worker is deployed and the store build points at it.
+- [ ] A `chrome-review` access code is in `ACCESS_CODES` and in the test instructions.
 - [ ] A privacy section for this app is live on https://build40for40.com/privacy/ (`site` repo), written from `privacy.md`.
 - [ ] Real screenshots from `testing.md`.
 - [ ] Listing copy and privacy answers checked against the build being uploaded.

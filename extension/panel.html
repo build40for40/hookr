@@ -42,6 +42,22 @@
       </div>
     </section>
 
+    <section id="access" class="body access" hidden>
+      <form id="access-form">
+        <h1>Enter your access code</h1>
+        <p>Hookr's invite only while we test it. Paste the code the 40 for 40 team sent you and you're in.</p>
+        <label class="label" for="code">Access code</label>
+        <input id="code" name="code" type="password" autocomplete="off" spellcheck="false" required>
+        <p class="note" id="access-note" role="status"></p>
+        <div class="actions">
+          <button class="primary" type="submit">Let me in</button>
+          <button class="quiet" type="button" id="access-back">Back</button>
+        </div>
+        <button class="link" type="button" id="forget">Forget my code on this browser</button>
+        <p class="aside">No code? Ask <a href="mailto:hello@40for40.app">hello@40for40.app</a>.</p>
+      </form>
+    </section>
+
     <section id="failed" class="body" hidden>
       <p class="error" id="error"></p>
       <div class="actions">
@@ -50,7 +66,7 @@
     </section>
   </main>
 
-  <footer class="foot"><span id="words"></span><span id="promise"></span></footer>
+  <footer class="foot"><span id="words"></span><span id="promise"></span><button class="link" id="change-code" hidden>Access code</button></footer>
 
   <script type="module" src="panel.js"></script>
 </body>

@@ -7,5 +7,9 @@
   "workers_dev": true,
   "observability": { "enabled": true },
   // provider:model. The provider's key comes from the org secret of the same name, set by CI on deploy.
-  "vars": { "MODEL": "anthropic:claude-sonnet-5-5" }
+  "vars": { "MODEL": "anthropic:claude-sonnet-5-5" },
+  // POST /post calls per person per minute. namespace_id must be unique in the Cloudflare account.
+  "ratelimits": [
+    { "name": "POSTS_PER_PERSON", "namespace_id": "6001", "simple": { "limit": 20, "period": 60 } }
+  ]
 }

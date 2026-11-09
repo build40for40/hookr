@@ -29,6 +29,7 @@ Copy for the dashboard fields. Check every line against the build you upload, an
 - `activeTab`: reads the current tab only after the user clicks the toolbar button on it. The side panel stays open across tabs, but it can only read a tab the user clicked the button on, and only until that tab leaves the site.
 - `scripting`: runs the one function that copies that tab's visible article text.
 - `sidePanel`: shows Hookr in Chrome's side panel, opened by the toolbar button, so the post sits next to the article while the author edits and copies it.
+- `storage`: keeps the user's Hookr access code on their device, so they paste it once instead of every time the panel opens. Nothing else is stored with it, and the user can forget it from the panel.
 
 **Remote code:** No. All code is in the package. The service returns JSON data only.
 
@@ -38,7 +39,9 @@ Copy for the dashboard fields. Check every line against the build you upload, an
 
 ## Test instructions for reviewers
 
-> Open a public Substack article, then click the Hookr toolbar button. Hookr opens in the side panel and writes one post from the article. <Steps a reviewer can follow with no account, or the test account to use. Never a real user's account.>
+> Hookr is invite only while we test it, so it asks for an access code first. Your code is: <reviewer code>. Open a public Substack article, then click the Hookr toolbar button. Hookr opens in the side panel; paste the code and click **Let me in**. It writes one post from the article. The **Access code** link at the bottom of the panel changes or forgets the code.
+
+**The reviewer code:** make one just for the review with `npm run access-code -- chrome-review`, add its pair to `ACCESS_CODES` (`npm run wrangler -- secret put ACCESS_CODES` with the full list) and paste the code above. Never give reviewers a team member's code. Once the review is done, approved or not, revoke it by putting the list back without the `chrome-review` pair, and make a fresh one for the next submission.
 
 ## Distribution tab
 

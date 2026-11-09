@@ -35,7 +35,7 @@ test('the toolbar button opens the side panel, and a popup would stop it', () =>
   const manifest = JSON.parse(readFileSync(join(root, 'extension/manifest.json'), 'utf8'));
   assert.equal(manifest.side_panel.default_path, 'panel.html');
   assert.equal(manifest.background.service_worker, 'background.js');
-  assert.deepEqual(manifest.permissions, ['activeTab', 'scripting', 'sidePanel']);
+  assert.deepEqual(manifest.permissions, ['activeTab', 'scripting', 'sidePanel', 'storage']);
   assert.equal(manifest.action.default_popup, undefined);
   const withPopup = { ...manifest, action: { ...manifest.action, default_popup: 'panel.html' } };
   assert.match(checkManifest(withPopup).join('\n'), /default_popup/);

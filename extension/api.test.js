@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_API, characters, sourceLabel, wordCount, writePost } from './api.js';
+import { ApiError, DEFAULT_API, characters, sourceLabel, wordCount, writePost } from './api.js';
 
 const reply = (body, status = 200) => new Response(JSON.stringify(body), { status });
 
@@ -17,6 +17,18 @@ test('writePost sends the text to the Worker and surfaces its errors', async () 
   });
   assert.deepEqual(asked, { text: 'Some words.', mood: 'calm' });
   await assert.rejects(writePost('x', { fetcher: async () => reply({ error: { message: 'Too long.' } }, 413) }), /Too long\./);
+});
+
+test('writePost sends the access code as a bearer token and flags a 401', async () => {
+  let sent;
+  await writePost('x', { code: 'my-code', fetcher: async (url, init) => { sent = init.headers; return reply({ post: 'P' }); } });
+  assert.equal(sent.Authorization, 'Bearer my-code');
+  await writePost('x', { fetcher: async (url, init) => { sent = init.headers; return reply({ post: 'P' }); } });
+  assert.equal(sent.Authorization, undefined);
+  await assert.rejects(
+    writePost('x', { code: 'old', fetcher: async () => reply({ error: { code: 'unauthorised', message: 'Nope.' } }, 401) }),
+    error => error instanceof ApiError && error.status === 401,
+  );
 });
 
 test('counts, words and the source label', () => {

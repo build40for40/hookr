@@ -56,7 +56,11 @@
     frame('screens', "Can't read this tab", `${panel}?state=blocked&mood=elegant`);
     frame('screens', 'Moved to another article', `${panel}?state=elsewhere&mood=elegant`);
     frame('screens', "Moved to a tab it can't read", `${panel}?state=unreadable&mood=elegant`);
+    frame('screens', 'Enter your access code', `${panel}?state=access&mood=elegant`);
+    frame('screens', 'That code didn\'t work', `${panel}?state=access-wrong&mood=elegant`);
+    frame('screens', 'Changing a saved code', `${panel}?state=access-change&mood=elegant`);
     for (const width of [320, 420, 600]) frame('widths', `${width}px`, `${panel}?state=elsewhere&mood=elegant`, width);
+    for (const width of [320, 420]) frame('widths', `Access code, ${width}px`, `${panel}?state=access-wrong&mood=elegant`, width);
     for (const { id, name } of MOODS) frame('moods', name, `${panel}?state=result&mood=${id}`);
   </script>
 </body>
