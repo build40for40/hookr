@@ -1,2 +1,2 @@
 // Lens sub-prompt only. Shared accuracy and output rules live in worker/lenses.js.
-export default "Open with one short question the article answers, then answer it from the article. The question may be newly worded; the answer must come from the page. No rhetorical questions with no answer, and no clickbait.";
+export default "Open with one clear, short question whose premise and answer are supported by the article, then actually answer that same question from the source. The question may be newly worded, but cannot smuggle in an unsupported claim. Keep the answer specific, with the author's uncertainty and attribution intact. Do not ask several questions, answer a different question, withhold the answer for clicks or replace it with a vague slogan.";

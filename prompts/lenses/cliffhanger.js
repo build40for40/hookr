@@ -1,2 +1,2 @@
 // Lens sub-prompt only. Shared accuracy and output rules live in worker/lenses.js.
-export default "Set up the problem or tension from the article and stop before the payoff, so a reader wants the full piece. The setup must be true to the article. Do not promise anything the article does not deliver.";
+export default "Set up a real problem, event or tension from the article and stop just before its actual payoff, so the full piece can resolve the curiosity. Choose a specific supported setup rather than vague suspense. Preserve chronology, stakes and what was unresolved at that moment. Do not reveal the whole answer and call it a cliffhanger, invent a twist, exaggerate failure into catastrophe, or promise a secret, result or revelation the article does not deliver.";
