@@ -37,9 +37,9 @@ No build step: after changing extension files, click **Reload** on its card.
 Deployed at https://hookr-api.40for40.workers.dev.
 
 - `GET /health`: `{ "ok": true }`
-- `POST /post` with `{ "text": "..." }`: `{ "post": "...", "excerpt": "...", "length": 0 }`. `post` is at most 280 by X's weighted count (`length`), and `excerpt` is the passage from the article that supports it, checked against the text sent. Errors are `{ "error": { "code", "message" } }`, including 422 `insufficient_source` when the page has too little to work with.
+- `POST /post` with `{ "text": "...", "mood": "calm" }`: `{ "post": "...", "excerpt": "...", "length": 0 }`. `post` is at most 280 by X's weighted count (`length`), and `excerpt` is the passage from the article that supports it, checked against the text sent. Errors are `{ "error": { "code", "message" } }`, including 422 `insufficient_source` when the page has too little to work with.
 
-The prompt is [prompts/generate-post-v1.md](prompts/generate-post-v1.md).
+The base prompt is [prompts/generate-post-v1.md](prompts/generate-post-v1.md). Each mood selects a separate [lens sub-prompt](prompts/lenses/README.md), composed with the base by `worker/lenses.js`. `mood` is optional; missing or unknown IDs use Elegant. The reply format is unchanged.
 
 The Worker uses the [AI SDK](https://ai-sdk.dev), so the model is one setting: `MODEL` in `wrangler.jsonc`, written `provider:model` (`anthropic`, `openai` or `google`). It's `anthropic:claude-sonnet-5-5`. CI copies the org's `ANTHROPIC_API_KEY` secret into the Worker on every deploy; switching provider means adding its key (`OPENAI_API_KEY` or `GOOGLE_GENERATIVE_AI_API_KEY`) to the deploy step's `secrets` in `.github/workflows/ci.yml`.
 
