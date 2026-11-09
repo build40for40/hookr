@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <title>Hookr</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="bar">
+    <img src="icons/icon-32.png" alt="">Hookr<span class="source" id="source"></span>
+  </header>
+
+  <section id="reading" class="reading">
+    <p>Reading your page…</p>
+    <small>Looking for the line worth posting.</small>
+    <div class="lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  </section>
+
+  <section id="result" class="body" hidden>
+    <span class="label">Your post for X</span>
+    <div class="post" id="post"></div>
+    <div class="count"><span><b id="chars">0</b> / 280</span><span>Every word is yours</span></div>
+
+    <div class="actions">
+      <button class="primary" id="copy">Copy for X</button>
+      <button class="quiet" id="again">Another hook</button>
+    </div>
+  </section>
+
+  <section id="failed" class="body" hidden>
+    <p class="error" id="error"></p>
+    <div class="actions">
+      <button class="quiet" id="retry">Try again</button>
+    </div>
+  </section>
+
+  <footer class="foot"><span id="words"></span><span>Nothing invented</span></footer>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

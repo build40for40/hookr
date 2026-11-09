@@ -7,6 +7,24 @@ Day 6 of 40 for 40, built live on Twitch on Monday 9 November 2026. The problem 
 
 Shared 40 for 40 context lives in `../AGENTS.md`.
 
+## Layout
+
+- **`extension/`:** the Manifest V3 extension, plain JavaScript with no build step. Clicking the toolbar button opens `popup.html`; `popup.js` runs `page.js` in the active tab (`activeTab` + `scripting`) to copy the article text, then sends the text to the Worker through `api.js` and shows the post it gets back. `api.js` defaults to `http://localhost:8787`; the store build rewrites that line to the live Worker.
+- **`worker/`:** the `hookr-api` Cloudflare Worker: `POST /post` takes `{ text }` and returns `{ post }` of at most 280 characters, plus `GET /health`. `index.js` routes and exports `handle(request, env, model)` for tests. `post.js` holds the prompt and the model call through the Vercel AI SDK, so prompt work happens there; it retries up to three times if a post comes back too long. No model or provider is assumed: `MODEL` (`provider:model`, with `anthropic`, `openai` or `google` registered) and the provider's key are Worker secrets, and `/post` answers 503 `not_configured` until `MODEL` is set. JSON responses, CORS `*` (no cookies), errors as `{ error: { code, message } }`. The entry module may only export handlers, so shared constants live in `post.js`.
+- **`scripts/package-extension.mjs`:** builds the store ZIP from the `RUNTIME_FILES` allowlist. Any other file in `extension/`, except `*.test.js`, stops the build.
+- **`publishing/`:** store listing, privacy facts and release checks. Start with `publishing/README.md`.
+- **`brand/`, `design/`, `web/`:** the brand and icons (`extension/icons/` are copies of `brand/icon-*.png`), the popup mockup the extension follows, and the static landing page.
+- **Tests:** `node --test`, colocated with the file they cover (`worker/index.test.js`, `worker/post.test.js`, `extension/api.test.js`, `scripts/package-extension.test.mjs`). The Worker tests use the AI SDK's `MockLanguageModelV4` (`worker/mock-model.js`), so they need no key.
+
+## Commands
+
+- Node.js 24 (`.node-version`). `npm ci`.
+- `npm run dev` runs the Worker on http://localhost:8787 with `MODEL` and the provider's key from the ignored `.dev.vars` (copy `.dev.vars.example`). Load `extension/` unpacked at `chrome://extensions` (Developer mode, **Load unpacked**). After changing extension files, click **Reload** on its card.
+- `npm test` and `npm run check` (tests plus a Wrangler dry run).
+- **Deploys:** CI deploys the Worker on every push to `main` once the checks pass, with the org's `CLOUDFLARE_API_TOKEN` secret (skipped with a notice if the repo can't see it). `npm run deploy` is the hand fallback. Set `MODEL` and the provider's key once with `npm run wrangler -- secret put <NAME>`, never from CI. Switching model is `secret put MODEL` again, no deploy needed. The extension goes to the stores by hand (`publishing/README.md`).
+- `npm run extension:package` builds `dist/hookr-chrome-<version>.zip` (no localhost, live API). `npm run extension:package:dev` keeps localhost; never upload it. Add new extension files to `RUNTIME_FILES` first.
+- Always run Wrangler as `npm run wrangler -- <args>` (the `40for40` profile).
+
 ## The problem
 
 I want to turn my Substack posts and a book that I have written into a content engine for marketing. Breaking it up into social media scripts and content that I can use - no hallucination. All with my tone of voice and exactly as I've written it.

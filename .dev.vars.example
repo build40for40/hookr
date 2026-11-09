@@ -1,0 +1,7 @@
+# Local secrets for `npm run dev`. Copy to .dev.vars (ignored) and fill in.
+# Production values go in Cloudflare secrets: npm run wrangler -- secret put <NAME>
+# MODEL is provider:model, where provider is anthropic, openai or google. Fill in that provider's key.
+MODEL=
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+GOOGLE_GENERATIVE_AI_API_KEY=
