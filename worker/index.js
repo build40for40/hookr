@@ -1,9 +1,9 @@
-import { bearer, parseCodes, personFor } from './access.js';
+// import { bearer, parseCodes, personFor } from './access.js';
 import { InsufficientSourceError, MAX_TEXT, modelFor, NoValidPostError, writePost } from './post.js';
 import { rateFit } from './fit.js';
 import { selectionFor } from '../prompts/formats/index.js';
 
-// CORS allows any origin: requests carry an access code header, never cookies.
+// CORS allows any origin: requests never carry cookies.
 const headers = {
   'Content-Type': 'application/json; charset=utf-8',
   'Access-Control-Allow-Origin': '*',
@@ -16,11 +16,14 @@ const json = (body, status = 200, extra = {}) => new Response(JSON.stringify(bod
 const error = (code, message, status, extra) => json({ error: { code, message } }, status, extra);
 
 async function post(request, env, model, mode = 'post') {
-  const codes = parseCodes(env.ACCESS_CODES);
-  if (!codes.length) return error('not_configured', "Access codes aren't set up on the server.", 503);
-  const person = await personFor(bearer(request), codes);
-  if (!person) return error('unauthorised', "That access code didn't work.", 401, { 'WWW-Authenticate': 'Bearer' });
-  const limit = await env.POSTS_PER_PERSON?.limit({ key: person });
+  // Access codes are off for now. To turn them back on, restore these lines,
+  // key the rate limit by `person` and log it again.
+  // const codes = parseCodes(env.ACCESS_CODES);
+  // if (!codes.length) return error('not_configured', "Access codes aren't set up on the server.", 503);
+  // const person = await personFor(bearer(request), codes);
+  // if (!person) return error('unauthorised', "That access code didn't work.", 401, { 'WWW-Authenticate': 'Bearer' });
+  const caller = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+  const limit = await env.POSTS_PER_PERSON?.limit({ key: caller });
   if (limit && !limit.success) return error('rate_limited', "That's a lot of hooks in one minute. Give it a moment.", 429, { 'Retry-After': '60' });
 
   const body = await request.json().catch(() => null);
@@ -31,7 +34,7 @@ async function post(request, env, model, mode = 'post') {
     if (!env.MODEL) return error('not_configured', 'No model is set on the server.', 503);
     try {
       const rated = await rateFit(model(), text);
-      console.log({ event: 'fit', person });
+      console.log({ event: 'fit' });
       return json(rated);
     } catch {
       // No fallback ratings: the extension intentionally leaves all lenses unrated.
@@ -46,7 +49,7 @@ async function post(request, env, model, mode = 'post') {
 
   try {
     const written = await writePost(model(), text, { mood: body.mood, ...selection });
-    console.log({ event: 'post', person, mood: body.mood ?? null, ...selection });
+    console.log({ event: 'post', mood: body.mood ?? null, ...selection });
     return json(written);
   } catch (cause) {
     if (cause instanceof InsufficientSourceError) {

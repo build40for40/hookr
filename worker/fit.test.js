@@ -15,10 +15,11 @@ const send = (body, model, settings = env, code = 'test-code') => handle(new Req
   method: 'POST', headers: { Authorization: `Bearer ${code}` }, body: JSON.stringify(body),
 }), settings, () => model);
 
-test('/fit reuses auth, limits and text validation without model calls on invalid requests', async () => {
+test('/fit reuses limits and text validation without model calls on invalid requests', async () => {
   const { model, prompts } = mockModel(JSON.stringify(payload()));
   for (const [body, settings, code, status] of [
-    [{ text: article }, env, 'wrong', 401], [{ text: article }, { MODEL: 'mock:model' }, 'test-code', 503],
+    // Access codes are off for now; restore these cases when they come back.
+    // [{ text: article }, env, 'wrong', 401], [{ text: article }, { MODEL: 'mock:model' }, 'test-code', 503],
     [{ text: article }, { ...env, POSTS_PER_PERSON: { limit: async () => ({ success: false }) } }, 'test-code', 429],
     [{ text: '' }, env, 'test-code', 400], [{ text: 'x'.repeat(MAX_TEXT + 1) }, env, 'test-code', 413],
     [{ text: article }, { ACCESS_CODES: env.ACCESS_CODES }, 'test-code', 503],
@@ -38,7 +39,7 @@ test('/fit returns complete current IDs, hides internal evidence and records no 
   assert.equal(Object.keys(body.fit).length, Object.keys(LENSES).length - 1);
   assert.ok(!Object.hasOwn(body.fit, DEFAULT_LENS));
   assert.equal(prompts.length, 1);
-  assert.deepEqual(log.mock.calls.map(call => call.arguments), [[{ event: 'fit', person: 'tester' }]]);
+  assert.deepEqual(log.mock.calls.map(call => call.arguments), [[{ event: 'fit' }]]);
 });
 
 test('invalid or unsourced model ratings never become default green ratings', async t => {
