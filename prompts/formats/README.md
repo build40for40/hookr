@@ -4,7 +4,7 @@ The Worker now supports five format families and seven platform variants. These 
 
 ## Frontend contract
 
-Send authenticated `POST /post` with the existing bearer access code:
+Send `POST /post` (access codes are off for now, so no `Authorization` header is needed):
 
 ```json
 {"text":"The extracted article", "mood":"calm", "format":"essay", "platform":"linkedin"}

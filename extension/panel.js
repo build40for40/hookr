@@ -96,7 +96,8 @@ async function rate() {
 function show(state) {
   screen = state;
   for (const id of ['reading', 'reach', 'result', 'failed', 'access']) $(id).hidden = id !== state;
-  $('change-code').hidden = !code || !['result', 'failed'].includes(state);
+  // Access codes are off for now, so the footer link stays hidden.
+  // $('change-code').hidden = !code || !['result', 'failed'].includes(state);
 }
 
 function fail(message) {
@@ -241,7 +242,8 @@ async function write({ hold = false } = {}) {
   const mine = ++run;
   revealed = !hold;
   held = null;
-  if (!code && !preview) return ask();
+  // Access codes are off for now; restore this to ask for one before writing.
+  // if (!code && !preview) return ask();
   if (!hold) show('reading');
   try {
     const post = await hook();
