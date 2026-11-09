@@ -1,9 +1,9 @@
-import { characters, rateFit, sourceLabel, wordCount, writePost } from './api.js';
+import { rateFit, sourceLabel, wordCount, writePost } from './api.js';
+import { FORMATS, copyLabel, formatFor, measure, platformFor } from './formats.js';
 import { DEFAULT_MOOD, FITS, better, moodFor, ordered } from './moods.js';
 import { readPage, tabNotice } from './page.js';
 import { clip, trace } from './trace.js';
 
-const LIMIT = 280;
 const $ = id => document.getElementById(id);
 
 // Opened outside the extension (design/preview.html), the panel runs on Kate's
@@ -16,6 +16,8 @@ const CODE_KEY = 'accessCode';
 
 let page;
 let mood = params.get('mood') ?? DEFAULT_MOOD;
+let format = formatFor(params.get('format'));
+let platform = platformFor(format, params.get('platform'));
 let fit = null;
 let held = null;
 let revealed = true;
@@ -28,7 +30,14 @@ let screen = 'reading';
 let before = 'reading';
 
 const WRONG_CODE = "That code didn't work. Check you copied all of it, or ask the team for a fresh one.";
-const CANT_READ = "Hookr can't read this tab yet. Open an article, like a Substack post, and click the Hookr icon in your toolbar.";
+const CANT_READ = "Click the hookr button on this page first, then we'll take a look.";
+const ERRORS = {
+  413: "That's a lot of you. Try a chapter rather than the whole book.",
+  422: "This page isn't giving us much. Try one with more words.",
+  429: 'Easy, tiger. Give it a minute.',
+  502: "Couldn't find an angle that fits tonight. Try again or try another page.",
+};
+const TRACED = 'Everything here comes from this page. No fakes.';
 
 // ---- Lenses ---------------------------------------------------------------
 
@@ -74,10 +83,61 @@ function chips() {
 function pick(id) {
   if (id === mood) return;
   setMood(id);
+  rewrite();
+}
+
+function rewrite() {
   attempt = 0;
   if (!page) return;
-  if (levelOf(id) === 'none') reach();
+  if (levelOf(mood) === 'none') reach();
   else write();
+}
+
+// ---- Formats --------------------------------------------------------------
+
+// Where the page is going. The pick stays as the author moves between pages;
+// a format with more than one home also asks which one.
+function setFormat() {
+  for (const tab of $('formats').children) tab.setAttribute('aria-pressed', String(tab.dataset.format === format.id));
+  $('format-line').textContent = format.line;
+  $('platforms').hidden = format.platforms.length < 2;
+  $('platforms').replaceChildren(...format.platforms.map(({ id, name }) => {
+    const choice = document.createElement('button');
+    choice.className = 'platform';
+    choice.textContent = name;
+    choice.setAttribute('aria-pressed', String(id === platform.id));
+    choice.addEventListener('click', () => choosePlatform(id));
+    return choice;
+  }));
+  $('reading-line').textContent = format.loading;
+  $('copy').textContent = copyLabel(format, platform);
+}
+
+function formatTabs() {
+  $('formats').replaceChildren(...FORMATS.map(({ id, name }) => {
+    const tab = document.createElement('button');
+    tab.className = 'format';
+    tab.dataset.format = id;
+    tab.textContent = name;
+    tab.addEventListener('click', () => chooseFormat(id));
+    return tab;
+  }));
+  setFormat();
+}
+
+function chooseFormat(id) {
+  if (id === format.id) return;
+  format = formatFor(id);
+  platform = platformFor(format);
+  setFormat();
+  rewrite();
+}
+
+function choosePlatform(id) {
+  if (id === platform.id) return;
+  platform = platformFor(format, id);
+  setFormat();
+  rewrite();
 }
 
 // Fit arrives while Best line is being written. A late answer for a page the
@@ -95,6 +155,7 @@ async function rate() {
 
 function show(state) {
   screen = state;
+  document.body.dataset.screen = state;
   for (const id of ['reading', 'reach', 'result', 'failed', 'access']) $(id).hidden = id !== state;
   $('change-code').hidden = !code || !['result', 'failed'].includes(state);
 }
@@ -104,26 +165,45 @@ function fail(message) {
   show('failed');
 }
 
-function showPost(post) {
-  original = post;
-  $('post').textContent = post;
-  const source = trace(post, page.text);
+// A thread shows each post as its own numbered card; everything else is one
+// block, and long reads and scripts scroll inside the card.
+function showPost(result) {
+  const reply = typeof result === 'string' ? { post: result } : result;
+  const posts = format.id === 'thread' && reply.posts?.length ? reply.posts : [reply.post];
+  original = posts.join('\n\n');
+  $('post-label').textContent = `${format.name} · ${platform.name}`;
+  $('post').hidden = format.id === 'thread';
+  $('thread').hidden = format.id !== 'thread';
+  $('post').classList.toggle('long', format.id === 'essay' || format.id === 'shorts');
+  if (format.id === 'thread') $('thread').replaceChildren(...posts.map(pearl));
+  else $('post').textContent = reply.post;
+  const source = trace(original, page.text);
   $('trace').classList.toggle('flagged', !source.found);
   if (source.found) {
-    $('trace-label').textContent = 'Found in your page';
+    $('trace-label').textContent = 'Traced to your page';
     $('excerpt').textContent = clip(source.excerpt);
     $('where').textContent = `Paragraph ${source.paragraph}`;
-    $('promise').textContent = 'Nothing invented';
+    $('promise').textContent = TRACED;
   } else {
-    $('trace-label').textContent = 'Not word for word on your page';
+    $('trace-label').textContent = "Some of this isn't on your page.";
     $('excerpt').textContent = clip(source.missing[0]);
-    $('where').textContent = 'Check it before you post';
-    $('promise').textContent = 'Drafted from your page';
+    $('where').textContent = 'Check it before you post.';
+    $('promise').textContent = 'Drafted from this page.';
   }
   $('result').dataset.found = String(source.found);
   stretch();
   count();
   show('result');
+  switchOn();
+}
+
+// A post arriving is a sign switching on: the card lifts in, the logo pulses once.
+function switchOn() {
+  for (const id of ['card', 'logo']) {
+    $(id).classList.remove('on');
+    void $(id).offsetWidth;
+    $(id).classList.add('on');
+  }
 }
 
 // A stretch gets a quiet line above the post; a reach she chose to see keeps
@@ -165,15 +245,40 @@ $('reach-show').addEventListener('click', () => {
   else showPost(held);
 });
 
-// The author can edit the post. X counts most characters as one; the Worker
-// keeps its own posts to 280, this keeps the author's edits honest.
+function pearl(text, index) {
+  const item = document.createElement('li');
+  item.className = 'pearl';
+  const body = document.createElement('div');
+  body.className = 'pearl-text';
+  body.contentEditable = 'plaintext-only';
+  body.setAttribute('role', 'textbox');
+  body.setAttribute('aria-multiline', 'true');
+  body.setAttribute('aria-label', `Post ${index + 1}`);
+  body.textContent = text;
+  const size = document.createElement('span');
+  size.className = 'pearl-count';
+  item.append(body, size);
+  return item;
+}
+
+const texts = () => (format.id === 'thread'
+  ? [...$('thread').querySelectorAll('.pearl-text')].map(post => post.innerText.trim()).filter(Boolean)
+  : [$('post').innerText.trim()]);
+
+// The author can edit the result. The Worker keeps its own output inside each
+// format's limits; this keeps the author's edits honest.
 function count() {
-  const text = $('post').innerText.trim();
-  const over = characters(text) - LIMIT;
-  $('chars').textContent = characters(text);
-  $('over').textContent = over > 0 ? ` · ${over} over` : '';
-  $('count').classList.toggle('over', over > 0);
-  $('copy').disabled = !text || over > 0;
+  const posts = texts();
+  const text = posts.join('\n\n');
+  const { meta, over } = measure(format, platform, posts.length ? posts : ['']);
+  $('count').textContent = meta;
+  $('count').classList.toggle('over', over);
+  for (const item of $('thread').children) {
+    const size = [...item.querySelector('.pearl-text').innerText.trim()].length;
+    item.querySelector('.pearl-count').textContent = `${size} / ${platform.limit}`;
+    item.classList.toggle('over', size > platform.limit);
+  }
+  $('copy').disabled = !text || over;
   const found = $('result').dataset.found === 'true';
   $('voice').textContent = text !== original ? 'Edited by you' : found ? 'Every word is yours' : 'Check every word';
 }
@@ -230,10 +335,15 @@ async function peek() {
 }
 
 async function hook() {
-  if (!preview) return writePost(page.text, { mood, code });
+  if (!preview) return writePost(page.text, { mood, format: format.id, platform: platform.id, code });
   await new Promise(resolve => setTimeout(resolve, 900));
+  return sampleFor();
+}
+
+function sampleFor() {
+  if (format.id !== 'tweet') return sample.formats[format.id];
   const hooks = sample.hooks[mood];
-  return hooks[attempt % hooks.length];
+  return { post: hooks[attempt % hooks.length] };
 }
 
 // `hold` writes behind the reach card and keeps the post until she asks for it.
@@ -256,28 +366,31 @@ async function write({ hold = false } = {}) {
 }
 
 async function failed(error) {
-  if (error.status !== 401) return fail(error.message);
+  if (error.status !== 401) return fail(ERRORS[error.status] ?? error.message);
   await saveCode(null);
   ask(WRONG_CODE, true);
 }
 
 $('post').addEventListener('input', count);
+$('thread').addEventListener('input', count);
 $('copy').addEventListener('click', async () => {
   try {
-    await navigator.clipboard.writeText($('post').innerText.trim());
+    await navigator.clipboard.writeText(texts().join('\n\n'));
     $('copy').textContent = 'Copied';
   } catch {
     $('copy').textContent = 'Select and copy';
   }
-  setTimeout(() => { $('copy').textContent = 'Copy for X'; }, 1500);
+  setTimeout(() => { $('copy').textContent = copyLabel(format, platform); }, 1500);
 });
 $('again').addEventListener('click', () => { attempt += 1; write(); });
 $('retry').addEventListener('click', () => (page ? write() : start()));
 $('hook-here').addEventListener('click', () => start());
 
+const words = here => `${wordCount(here.text).toLocaleString('en-GB')} words`;
+
 function describe(here) {
   $('source').textContent = here ? sourceLabel(here) : '';
-  $('words').textContent = here ? `Read ${wordCount(here.text).toLocaleString('en-GB')} words` : '';
+  $('words').textContent = here ? words(here) : '';
   $('promise').textContent = '';
 }
 
@@ -306,7 +419,7 @@ function notice(kind, here) {
   $('elsewhere').hidden = !kind;
   $('hook-here').hidden = kind !== 'new';
   if (kind === 'new') $('elsewhere-text').textContent = `Now on ${here.title || sourceLabel(here)}`;
-  if (kind === 'unreadable') $('elsewhere-text').textContent = "Hookr can't read this tab. Click the Hookr icon in your toolbar to read it.";
+  if (kind === 'unreadable') $('elsewhere-text').textContent = CANT_READ;
 }
 
 async function look() {
@@ -331,22 +444,28 @@ function listen() {
 function pin(state) {
   page = sample.page;
   $('source').textContent = sourceLabel(page);
-  $('words').textContent = `Read ${wordCount(page.text).toLocaleString('en-GB')} words`;
+  $('words').textContent = words(page);
   const hooks = sample.hooks[mood];
   if (state !== 'unrated') fit = sample.fit;
   chips();
   if (state === 'reading') show('reading');
-  if (state === 'unrated') showPost(hooks[0]);
+  if (state === 'unrated') showPost(sampleFor());
   if (state === 'reach') reach();
-  if (state === 'stretch' || state === 'revealed') showPost(hooks[0]);
-  if (state === 'result') showPost(hooks[0]);
+  if (state === 'stretch' || state === 'revealed') showPost(sampleFor());
+  if (state === 'result') showPost(sampleFor());
   if (state === 'drafted') showPost(sample.drafted);
   if (state === 'over') {
     showPost(hooks[0]);
     $('post').textContent = `${hooks[0]} ${sample.hooks.lesson[0]}`;
     count();
   }
-  if (state === 'failed') fail("Couldn't write a post just now. Give it another go.");
+  if (state === 'thread-over') {
+    showPost(sampleFor());
+    $('thread').querySelector('.pearl-text').textContent += ` ${sample.hooks.lesson[0]}`;
+    count();
+  }
+  if (state === 'failed') fail(ERRORS[502]);
+  if (state === 'rate-limited') fail(ERRORS[429]);
   if (state === 'elsewhere') {
     showPost(hooks[0]);
     notice('new', { ...sample.page, title: 'Five things to do before your AI agent reads your email' });
@@ -369,6 +488,7 @@ function pin(state) {
   }
 }
 
+formatTabs();
 chips();
 if (preview && params.get('state')) pin(params.get('state'));
 else {

@@ -26,6 +26,7 @@ export function validateFormat(reply, format, platform) {
   if (format === 'essay') {
     if (wordCount(reply.post) > 700) return 'essay exceeds 700 words';
   }
+  if (format === 'feed' && length > 500) return 'feed post exceeds 500 characters';
   if (format === 'instagram' && length > 2200) return 'caption exceeds 2200 characters';
   if (format === 'shorts') {
     const words = wordCount(reply.post);
