@@ -8,8 +8,15 @@
 </head>
 <body>
   <header class="bar">
-    <img src="icons/icon-32.png" alt="">Hookr<span class="source" id="source"></span>
+    <span class="logo" id="logo" role="img" aria-label="Hookr">hookr</span>
+    <span class="source"><span id="source"></span><small id="words"></small></span>
   </header>
+
+  <nav class="formats" aria-labelledby="formats-label">
+    <span class="label" id="formats-label">Where's it going tonight?</span>
+    <div class="format-tabs" id="formats" role="group" aria-labelledby="formats-label"></div>
+    <div class="format-meta"><p id="format-line"></p><div class="platforms" id="platforms" role="group" aria-label="Platform"></div></div>
+  </nav>
 
   <div class="moods" id="moods" role="group" aria-label="Lens"></div>
   <p class="mood-line" id="mood-line"></p>
@@ -21,43 +28,42 @@
 
   <main aria-live="polite">
     <section id="reading" class="reading">
-      <p>Reading your page…</p>
-      <small>Looking for the line worth posting.</small>
+      <p id="reading-line">Finding your best angle…</p>
+      <small>Reading every line you wrote.</small>
       <div class="lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     </section>
 
-    <section id="reach" class="body" hidden>
-      <div class="reach-card">
-        <h2 id="reach-title"></h2>
-        <p id="reach-reason"></p>
-        <div class="actions">
-          <button class="primary" id="reach-better"></button>
-          <button class="quiet" id="reach-show">Show me</button>
-        </div>
-      </div>
-    </section>
-
     <section id="result" class="body" hidden>
-      <p class="stretch" id="stretch" hidden></p>
-      <span class="label" id="post-label">Your post for X</span>
-      <div class="post" id="post" role="textbox" aria-multiline="true" aria-labelledby="post-label" contenteditable="plaintext-only"></div>
-      <div class="count" id="count"><span><b id="chars">0</b> / 280<span id="over"></span></span><span id="voice"></span></div>
+      <p class="fit-line" id="fit-line" hidden></p>
 
-      <div class="trace" id="trace">
-        <span class="label" id="trace-label"></span><br>
-        <mark id="excerpt"></mark> <span class="where" id="where"></span>
+      <div class="veil" id="veil" hidden>
+        <div class="veil-lines" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <button class="quiet" id="reveal">I know the risks, show me anyway</button>
       </div>
 
-      <div class="actions">
-        <button class="primary" id="copy">Copy for X</button>
-        <button class="quiet" id="again">Another hook</button>
+      <div id="shown">
+        <div class="card" id="card">
+          <div class="card-head"><span class="label" id="post-label"></span><span class="count" id="count"></span></div>
+          <div class="post" id="post" role="textbox" aria-multiline="true" aria-labelledby="post-label" contenteditable="plaintext-only"></div>
+          <ol class="thread" id="thread" aria-labelledby="post-label" hidden></ol>
+          <div class="trace" id="trace">
+            <span class="trace-label" id="trace-label"></span>
+            <mark id="excerpt"></mark> <span class="where" id="where"></span>
+          </div>
+        </div>
+        <p class="voice" id="voice"></p>
+
+        <div class="actions">
+          <button class="primary" id="copy">Copy for X</button>
+          <button class="quiet" id="again">Try another angle</button>
+        </div>
       </div>
     </section>
 
     <section id="access" class="body access" hidden>
       <form id="access-form">
-        <h1>Enter your access code</h1>
-        <p>Hookr's invite only while we test it. Paste the code the 40 for 40 team sent you and you're in.</p>
+        <h1>Members only</h1>
+        <p>Hookr's invite only while we test it. Pop in the access code the 40 for 40 team sent you and you're in.</p>
         <label class="label" for="code">Access code</label>
         <input id="code" name="code" type="password" autocomplete="off" spellcheck="false" required>
         <p class="note" id="access-note" role="status"></p>
@@ -79,7 +85,7 @@
     </section>
   </main>
 
-  <footer class="foot"><span id="words"></span><span id="promise"></span><button class="link" id="change-code" hidden>Access code</button></footer>
+  <footer class="foot"><span id="promise"></span><button class="link" id="change-code" hidden>Access code</button></footer>
 
   <script type="module" src="panel.js"></script>
 </body>

@@ -1,9 +1,9 @@
-import { characters, rateFit, sourceLabel, wordCount, writePost } from './api.js';
-import { DEFAULT_MOOD, FITS, better, moodFor, ordered } from './moods.js';
+import { rateFit, sourceLabel, wordCount, writePost } from './api.js';
+import { FORMATS, copyLabel, formatFor, measure, platformFor } from './formats.js';
+import { DEFAULT_MOOD, FITS, moodFor, ordered } from './moods.js';
 import { READER_FILES, readPage, tabNotice } from './page.js';
 import { clip, trace } from './trace.js';
 
-const LIMIT = 280;
 const $ = id => document.getElementById(id);
 
 // Opened outside the extension (design/preview.html), the panel runs on Kate's
@@ -17,6 +17,8 @@ const CODE_KEY = 'accessCode';
 let page;
 let maybe = null;
 let mood = params.get('mood') ?? DEFAULT_MOOD;
+let format = formatFor(params.get('format'));
+let platform = platformFor(format, params.get('platform'));
 let fit = null;
 let held = null;
 let revealed = true;
@@ -29,10 +31,17 @@ let screen = 'reading';
 let before = 'reading';
 
 const WRONG_CODE = "That code didn't work. Check you copied all of it, or ask the team for a fresh one.";
-const CANT_READ = "Hookr can't read this tab yet. Open an article, like a Substack post, and click the Hookr icon in your toolbar.";
-const NOT_A_POST = "Hookr can't find a post on this page, so it's sending nothing. Open the post itself, or highlight the words you want and hit Try again.";
+const CANT_READ = "Click the hookr button on this page first, then we'll take a look.";
+const NOT_A_POST = "We can't find a post on this page, so we're sending nothing. Open the post itself, or highlight the words you want and hit Try again.";
 const UNSURE = "This might not be a post. If it's your writing, go for it. Or highlight just the bit you want and hit Try again.";
-const PAYWALLED = "This post is behind a paywall, so Hookr can only see the free preview. Open it signed in with full access, then hit Try again.";
+const PAYWALLED = "This post is behind a paywall, so we can only see the free preview. Open it signed in with full access, then hit Try again.";
+const ERRORS = {
+  413: "That's a lot of you. Try a chapter rather than the whole book.",
+  422: "This page isn't giving us much. Try one with more words.",
+  429: 'Easy, tiger. Give it a minute.',
+  502: "Couldn't find an angle that fits tonight. Try again or try another page.",
+};
+const TRACED = 'Everything here comes from this page. No fakes.';
 
 // ---- Lenses ---------------------------------------------------------------
 
@@ -42,32 +51,25 @@ const levelOf = id => (id === DEFAULT_MOOD ? null : fit?.[id]?.level in FITS ? f
 
 function setMood(id) {
   mood = moodFor(id).id;
-  const level = levelOf(mood);
   $('mood-line').textContent = moodFor(mood).line;
-  if (level) {
-    const name = document.createElement('span');
-    name.className = 'fit-name';
-    name.textContent = ` · ${FITS[level].name}`;
-    $('mood-line').append(name);
-  }
   for (const chip of $('moods').children) chip.setAttribute('aria-pressed', String(chip.dataset.mood === mood));
 }
 
 function chips() {
-  $('moods').replaceChildren(...ordered(fit).map(({ id, name }) => {
+  $('moods').replaceChildren(...ordered(fit).map(({ id, name, line }) => {
     const chip = document.createElement('button');
     const level = levelOf(id);
     chip.className = 'mood';
     chip.dataset.mood = id;
     if (level) {
       chip.dataset.fit = level;
-      chip.title = FITS[level].name;
       const dot = document.createElement('span');
       dot.className = 'fit';
       dot.setAttribute('aria-hidden', 'true');
       chip.append(dot);
     }
     chip.append(name);
+    chip.title = level ? `${line} ${FITS[level].name}.` : line;
     if (level) chip.setAttribute('aria-label', `${name}, ${FITS[level].name.toLowerCase()}`);
     chip.addEventListener('click', () => pick(id));
     return chip;
@@ -78,10 +80,61 @@ function chips() {
 function pick(id) {
   if (id === mood) return;
   setMood(id);
+  rewrite();
+}
+
+function rewrite() {
   attempt = 0;
   if (!page) return;
-  if (levelOf(id) === 'none') reach();
+  if (levelOf(mood) === 'none') hide();
   else write();
+}
+
+// ---- Formats --------------------------------------------------------------
+
+// Where the page is going. The pick stays as the author moves between pages;
+// a format with more than one home also asks which one.
+function setFormat() {
+  for (const tab of $('formats').children) tab.setAttribute('aria-pressed', String(tab.dataset.format === format.id));
+  $('format-line').textContent = format.line;
+  $('platforms').hidden = format.platforms.length < 2;
+  $('platforms').replaceChildren(...format.platforms.map(({ id, name }) => {
+    const choice = document.createElement('button');
+    choice.className = 'platform';
+    choice.textContent = name;
+    choice.setAttribute('aria-pressed', String(id === platform.id));
+    choice.addEventListener('click', () => choosePlatform(id));
+    return choice;
+  }));
+  $('reading-line').textContent = format.loading;
+  $('copy').textContent = copyLabel(format, platform);
+}
+
+function formatTabs() {
+  $('formats').replaceChildren(...FORMATS.map(({ id, name }) => {
+    const tab = document.createElement('button');
+    tab.className = 'format';
+    tab.dataset.format = id;
+    tab.textContent = name;
+    tab.addEventListener('click', () => chooseFormat(id));
+    return tab;
+  }));
+  setFormat();
+}
+
+function chooseFormat(id) {
+  if (id === format.id) return;
+  format = formatFor(id);
+  platform = platformFor(format);
+  setFormat();
+  rewrite();
+}
+
+function choosePlatform(id) {
+  if (id === platform.id) return;
+  platform = platformFor(format, id);
+  setFormat();
+  rewrite();
 }
 
 // Fit arrives while Pull quote is being written. A late answer for a page the
@@ -92,15 +145,17 @@ async function rate() {
   if (page !== asked) return;
   fit = got;
   chips();
-  if (screen === 'result') stretch();
+  if (screen === 'result') fitLine();
 }
 
 // ---- Screens --------------------------------------------------------------
 
 function show(state) {
   screen = state;
-  for (const id of ['reading', 'reach', 'result', 'failed', 'access']) $(id).hidden = id !== state;
-  $('change-code').hidden = !code || !['result', 'failed'].includes(state);
+  document.body.dataset.screen = state;
+  for (const id of ['reading', 'result', 'failed', 'access']) $(id).hidden = id !== state;
+  // Access codes are off for now, so the footer link stays hidden.
+  // $('change-code').hidden = !code || !['result', 'failed'].includes(state);
 }
 
 function fail(message, anyway = false) {
@@ -109,76 +164,125 @@ function fail(message, anyway = false) {
   show('failed');
 }
 
-function showPost(post) {
-  original = post;
-  $('post').textContent = post;
-  const source = trace(post, page.text);
+// A thread shows each post as its own numbered card; everything else is one
+// block, and long reads and scripts scroll inside the card.
+function showPost(result) {
+  const reply = typeof result === 'string' ? { post: result } : result;
+  const posts = format.id === 'thread' && reply.posts?.length ? reply.posts : [reply.post];
+  original = posts.join('\n\n');
+  $('post-label').textContent = `${format.name} · ${platform.name}`;
+  $('post').hidden = format.id === 'thread';
+  $('thread').hidden = format.id !== 'thread';
+  $('post').classList.toggle('long', format.id === 'essay' || format.id === 'shorts');
+  if (format.id === 'thread') $('thread').replaceChildren(...posts.map(pearl));
+  else $('post').textContent = reply.post;
+  const source = trace(original, page.text);
   $('trace').classList.toggle('flagged', !source.found);
   if (source.found) {
-    $('trace-label').textContent = 'Found in your page';
+    $('trace-label').textContent = 'Traced to your page';
     $('excerpt').textContent = clip(source.excerpt);
     $('where').textContent = `Paragraph ${source.paragraph}`;
-    $('promise').textContent = 'Nothing invented';
+    $('promise').textContent = TRACED;
   } else {
-    $('trace-label').textContent = 'Not word for word on your page';
+    $('trace-label').textContent = "Some of this isn't on your page.";
     $('excerpt').textContent = clip(source.missing[0]);
-    $('where').textContent = 'Check it before you post';
-    $('promise').textContent = 'Drafted from your page';
+    $('where').textContent = 'Check it before you post.';
+    $('promise').textContent = 'Drafted from this page.';
   }
   $('result').dataset.found = String(source.found);
-  stretch();
+  fitLine();
+  veil(false);
   count();
   show('result');
+  switchOn();
 }
 
-// A stretch gets a quiet line above the post; a reach she chose to see keeps
-// its warning. Good fits and Pull quote say nothing.
-function stretch() {
+// A post arriving is a sign switching on: the card lifts in, the logo pulses once.
+function switchOn() {
+  for (const id of ['card', 'logo']) {
+    $(id).classList.remove('on');
+    void $(id).offsetWidth;
+    $(id).classList.add('on');
+  }
+}
+
+// Every rated lens gets the same line above the result: the fit, then why, from
+// the Worker's reason or the lens's own. Pull quote has no line.
+const why = level => fit?.[mood]?.reason?.trim() || moodFor(mood).reasons?.[level] || '';
+
+const FIT_LINES = {
+  strong: name => [`This story is a great fit for the ${name} angle.`, ''],
+  thin: name => [`This story is a stretch for the ${name} angle.`, 'Worth a polish before you post.'],
+  none: name => [`This story isn't a great fit for the ${name} angle.`, "We wrote one anyway because it might spark an idea, but we don't recommend posting it as is."],
+};
+
+function fitLine() {
   const level = levelOf(mood);
-  const line = $('stretch');
-  line.hidden = level !== 'thin' && level !== 'none';
-  line.classList.toggle('reach', level === 'none');
-  if (line.hidden) return;
-  const [title, note] = level === 'thin'
-    ? ['A bit of a stretch.', 'Worth a polish before you post.']
-    : ['A reach for this page.', 'For ideas, not for posting as-is.'];
+  const line = $('fit-line');
+  line.hidden = !level;
+  if (!level) return;
+  line.dataset.fit = level;
+  const [title, note] = FIT_LINES[level](moodFor(mood).name);
   const strong = document.createElement('b');
   strong.textContent = title;
-  line.replaceChildren(strong, ` ${note}`);
+  line.replaceChildren(strong, ` ${[why(level), note].filter(Boolean).join(' ')}`);
 }
 
-// A reach: the page has little for this lens. Hookr still writes one, because
-// it might spark an idea, but she has to ask to see it.
-function reach() {
-  const { name } = moodFor(mood);
-  const instead = better(fit);
-  const reason = fit?.[mood]?.reason?.trim() || "There wasn't much on the page to build it from.";
-  $('reach-title').textContent = `${name} is a reach here`;
-  $('reach-reason').textContent = `${reason} We wrote one anyway: worth a look for ideas, not for posting as-is.`;
-  $('reach-better').textContent = `Try ${instead.name}`;
-  $('reach-better').dataset.mood = instead.id;
-  $('reach-better').hidden = instead.id === mood;
-  show('reach');
+// A poor fit: Hookr still writes one, because it might spark an idea, but the
+// result stays greyed out until she asks to see it.
+function veil(on) {
+  $('veil').hidden = !on;
+  $('shown').hidden = on;
+}
+
+function hide() {
+  fitLine();
+  veil(true);
+  show('result');
   write({ hold: true });
 }
 
-$('reach-better').addEventListener('click', () => pick($('reach-better').dataset.mood));
-$('reach-show').addEventListener('click', () => {
+$('reveal').addEventListener('click', () => {
   revealed = true;
   if (held === null) show('reading');
   else if (held instanceof Error) failed(held);
   else showPost(held);
 });
 
-// The author can edit the post. X counts most characters as one; the Worker
-// keeps its own posts to 280, this keeps the author's edits honest.
+function pearl(text, index) {
+  const item = document.createElement('li');
+  item.className = 'pearl';
+  const body = document.createElement('div');
+  body.className = 'pearl-text';
+  body.contentEditable = 'plaintext-only';
+  body.setAttribute('role', 'textbox');
+  body.setAttribute('aria-multiline', 'true');
+  body.setAttribute('aria-label', `Post ${index + 1}`);
+  body.textContent = text;
+  const size = document.createElement('span');
+  size.className = 'pearl-count';
+  item.append(body, size);
+  return item;
+}
+
+const texts = () => (format.id === 'thread'
+  ? [...$('thread').querySelectorAll('.pearl-text')].map(post => post.innerText.trim()).filter(Boolean)
+  : [$('post').innerText.trim()]);
+
+// The author can edit the result. The Worker keeps its own output inside each
+// format's limits; this keeps the author's edits honest.
 function count() {
-  const text = $('post').innerText.trim();
-  const over = characters(text) - LIMIT;
-  $('chars').textContent = characters(text);
-  $('over').textContent = over > 0 ? ` · ${over} over` : '';
-  $('count').classList.toggle('over', over > 0);
-  $('copy').disabled = !text || over > 0;
+  const posts = texts();
+  const text = posts.join('\n\n');
+  const { meta, over } = measure(format, platform, posts.length ? posts : ['']);
+  $('count').textContent = meta;
+  $('count').classList.toggle('over', over);
+  for (const item of $('thread').children) {
+    const size = [...item.querySelector('.pearl-text').innerText.trim()].length;
+    item.querySelector('.pearl-count').textContent = `${size} / ${platform.limit}`;
+    item.classList.toggle('over', size > platform.limit);
+  }
+  $('copy').disabled = !text || over;
   const found = $('result').dataset.found === 'true';
   $('voice').textContent = text !== original ? 'Edited by you' : found ? 'Every word is yours' : 'Check every word';
 }
@@ -236,18 +340,24 @@ async function peek() {
 }
 
 async function hook() {
-  if (!preview) return writePost(page.text, { mood, code });
+  if (!preview) return writePost(page.text, { mood, format: format.id, platform: platform.id, code });
   await new Promise(resolve => setTimeout(resolve, 900));
-  const hooks = sample.hooks[mood];
-  return hooks[attempt % hooks.length];
+  return sampleFor();
 }
 
-// `hold` writes behind the reach card and keeps the post until she asks for it.
+function sampleFor() {
+  if (format.id !== 'tweet') return sample.formats[format.id];
+  const hooks = sample.hooks[mood];
+  return { post: hooks[attempt % hooks.length] };
+}
+
+// `hold` writes behind the greyed-out result and keeps it until she asks for it.
 async function write({ hold = false } = {}) {
   const mine = ++run;
   revealed = !hold;
   held = null;
-  if (!code && !preview) return ask();
+  // Access codes are off for now; restore this to ask for one before writing.
+  // if (!code && !preview) return ask();
   if (!hold) show('reading');
   try {
     const post = await hook();
@@ -262,20 +372,21 @@ async function write({ hold = false } = {}) {
 }
 
 async function failed(error) {
-  if (error.status !== 401) return fail(error.message);
+  if (error.status !== 401) return fail(ERRORS[error.status] ?? error.message);
   await saveCode(null);
   ask(WRONG_CODE, true);
 }
 
 $('post').addEventListener('input', count);
+$('thread').addEventListener('input', count);
 $('copy').addEventListener('click', async () => {
   try {
-    await navigator.clipboard.writeText($('post').innerText.trim());
+    await navigator.clipboard.writeText(texts().join('\n\n'));
     $('copy').textContent = 'Copied';
   } catch {
     $('copy').textContent = 'Select and copy';
   }
-  setTimeout(() => { $('copy').textContent = 'Copy for X'; }, 1500);
+  setTimeout(() => { $('copy').textContent = copyLabel(format, platform); }, 1500);
 });
 $('again').addEventListener('click', () => { attempt += 1; write(); });
 $('retry').addEventListener('click', () => (page ? write() : start()));
@@ -285,9 +396,11 @@ $('anyway').addEventListener('click', () => {
   hookPage();
 });
 
+const words = here => `${wordCount(here.text).toLocaleString('en-GB')} words`;
+
 function describe(here) {
   $('source').textContent = here ? sourceLabel(here) : '';
-  $('words').textContent = here?.text ? `Read ${wordCount(here.text).toLocaleString('en-GB')} words` : '';
+  $('words').textContent = here?.text ? words(here) : '';
   $('promise').textContent = '';
 }
 
@@ -323,8 +436,8 @@ function notice(kind, here) {
   $('elsewhere').hidden = !kind;
   $('hook-here').hidden = kind !== 'new';
   if (kind === 'new') $('elsewhere-text').textContent = `Now on ${here.title || sourceLabel(here)}`;
-  if (kind === 'unreadable') $('elsewhere-text').textContent = "Hookr can't read this tab. Click the Hookr icon in your toolbar to read it.";
-  if (kind === 'not_post') $('elsewhere-text').textContent = "No post here. Highlight the words you want and click the Hookr icon.";
+  if (kind === 'unreadable') $('elsewhere-text').textContent = CANT_READ;
+  if (kind === 'not_post') $('elsewhere-text').textContent = "No post here. Highlight the words you want, then click the hookr button.";
 }
 
 async function look() {
@@ -349,22 +462,28 @@ function listen() {
 function pin(state) {
   page = sample.page;
   $('source').textContent = sourceLabel(page);
-  $('words').textContent = `Read ${wordCount(page.text).toLocaleString('en-GB')} words`;
+  $('words').textContent = words(page);
   const hooks = sample.hooks[mood];
   if (state !== 'unrated') fit = sample.fit;
   chips();
   if (state === 'reading') show('reading');
-  if (state === 'unrated') showPost(hooks[0]);
-  if (state === 'reach') reach();
-  if (state === 'stretch' || state === 'revealed') showPost(hooks[0]);
-  if (state === 'result') showPost(hooks[0]);
+  if (state === 'unrated') showPost(sampleFor());
+  if (state === 'reach') hide();
+  if (state === 'stretch' || state === 'revealed') showPost(sampleFor());
+  if (state === 'result') showPost(sampleFor());
   if (state === 'drafted') showPost(sample.drafted);
   if (state === 'over') {
     showPost(hooks[0]);
     $('post').textContent = `${hooks[0]} ${sample.hooks.lesson[0]}`;
     count();
   }
-  if (state === 'failed') fail("Couldn't write a post just now. Give it another go.");
+  if (state === 'thread-over') {
+    showPost(sampleFor());
+    $('thread').querySelector('.pearl-text').textContent += ` ${sample.hooks.lesson[0]}`;
+    count();
+  }
+  if (state === 'failed') fail(ERRORS[502]);
+  if (state === 'rate-limited') fail(ERRORS[429]);
   if (state === 'elsewhere') {
     showPost(hooks[0]);
     notice('new', { ...sample.page, title: 'Five things to do before your AI agent reads your email' });
@@ -407,6 +526,7 @@ function pin(state) {
   }
 }
 
+formatTabs();
 chips();
 if (preview && params.get('state')) pin(params.get('state'));
 else {

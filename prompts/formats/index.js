@@ -1,4 +1,5 @@
 import essay from './essay.js';
+import feed from './feed.js';
 import shorts from './shorts.js';
 import instagram from './instagram.js';
 import thread from './thread.js';
@@ -7,7 +8,8 @@ import thread from './thread.js';
 // targets, not claims about platform limits or current trends.
 export const FORMATS = {
   tweet: { platforms: ['x'], defaultPlatform: 'x' },
-  essay: { platforms: ['substack', 'linkedin'], defaultPlatform: 'substack' },
+  feed: { platforms: ['linkedin', 'threads'], defaultPlatform: 'linkedin' },
+  essay: { platforms: ['substack', 'linkedin', 'x'], defaultPlatform: 'substack' },
   shorts: { platforms: ['youtube'], defaultPlatform: 'youtube' },
   instagram: { platforms: ['instagram'], defaultPlatform: 'instagram' },
   thread: { platforms: ['x', 'threads'], defaultPlatform: 'x' },
@@ -32,4 +34,4 @@ The excerpt must be one contiguous verbatim passage from ARTICLE DATA, without s
 Keep explanations and the excerpt outside content. No markdown fences around the JSON.
 If the source cannot honestly support the requested output, return {"abstain":true}. Do not pad short source material to meet a length target.`;
 
-export const FORMAT_PROMPTS = { essay, shorts, instagram, thread };
+export const FORMAT_PROMPTS = { feed, essay, shorts, instagram, thread };

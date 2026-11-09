@@ -7,49 +7,59 @@ import { mockModel } from './mock-model.js';
 
 const CODES = 'ben:ben-test-code,kate:kate-test-code';
 const env = { MODEL: 'mock:model', ACCESS_CODES: CODES };
-const send = (body, model, settings = env, code = 'kate-test-code') =>
+const send = (body, model, settings = env, code = 'kate-test-code', ip = '203.0.113.7') =>
   handle(new Request('http://api/post', {
     method: 'POST',
-    headers: code ? { Authorization: `Bearer ${code}` } : {},
+    headers: { 'CF-Connecting-IP': ip, ...(code && { Authorization: `Bearer ${code}` }) },
     body: JSON.stringify(body),
   }), settings, () => model);
 
-test('POST /post turns text into a post, readable from any origin, and logs who asked but not their code', async t => {
+test('POST /post turns text into a post, readable from any origin', async t => {
   const log = t.mock.method(console, 'log', () => {});
   const { model } = mockModel('Post: A post.\nSupporting excerpt: The article.');
   const response = await send({ text: 'The article.' }, model);
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('Access-Control-Allow-Origin'), '*');
   assert.deepEqual(await response.json(), { post: 'A post.', excerpt: 'The article.', length: 7 });
-  assert.deepEqual(log.mock.calls.map(call => call.arguments), [[{ event: 'post', person: 'kate', mood: null, format: 'tweet', platform: 'x' }]]);
+  assert.deepEqual(log.mock.calls.map(call => call.arguments), [[{ event: 'post', mood: null, format: 'tweet', platform: 'x' }]]);
 });
 
-test('POST /post needs a valid access code, and fails closed when none are set', async () => {
-  const { model, prompts } = mockModel('Post: A post.\nSupporting excerpt: The article.');
-  for (const code of [null, 'wrong-code', 'ben-test-codex', 'ben']) {
-    const response = await send({ text: 'The article.' }, model, env, code);
-    assert.equal(response.status, 401);
-    assert.equal(response.headers.get('WWW-Authenticate'), 'Bearer');
-    assert.equal((await response.json()).error.code, 'unauthorised');
+test('POST /post works without an access code while codes are off', async t => {
+  t.mock.method(console, 'log', () => {});
+  const { model } = mockModel('Post: A post.\nSupporting excerpt: The article.');
+  for (const code of [null, 'wrong-code']) {
+    const response = await send({ text: 'The article.' }, model, { MODEL: 'mock:model' }, code);
+    assert.equal(response.status, 200);
   }
-  for (const ACCESS_CODES of [undefined, '', ' , ']) {
-    const response = await send({ text: 'The article.' }, model, { MODEL: 'mock:model', ACCESS_CODES }, 'kate-test-code');
-    assert.equal(response.status, 503);
-    assert.equal((await response.json()).error.code, 'not_configured');
-  }
-  assert.equal(prompts.length, 0);
 });
 
-test('POST /post rate limits each person by name', async t => {
+// Access codes are off for now; restore this test when they come back.
+// test('POST /post needs a valid access code, and fails closed when none are set', async () => {
+//   const { model, prompts } = mockModel('Post: A post.\nSupporting excerpt: The article.');
+//   for (const code of [null, 'wrong-code', 'ben-test-codex', 'ben']) {
+//     const response = await send({ text: 'The article.' }, model, env, code);
+//     assert.equal(response.status, 401);
+//     assert.equal(response.headers.get('WWW-Authenticate'), 'Bearer');
+//     assert.equal((await response.json()).error.code, 'unauthorised');
+//   }
+//   for (const ACCESS_CODES of [undefined, '', ' , ']) {
+//     const response = await send({ text: 'The article.' }, model, { MODEL: 'mock:model', ACCESS_CODES }, 'kate-test-code');
+//     assert.equal(response.status, 503);
+//     assert.equal((await response.json()).error.code, 'not_configured');
+//   }
+//   assert.equal(prompts.length, 0);
+// });
+
+test('POST /post rate limits each caller by IP', async t => {
   t.mock.method(console, 'log', () => {});
   const keys = [];
   const POSTS_PER_PERSON = { limit: async ({ key }) => { keys.push(key); return { success: keys.length < 2 }; } };
   const { model } = mockModel('Post: A post.\nSupporting excerpt: The article.');
-  assert.equal((await send({ text: 'The article.' }, model, { ...env, POSTS_PER_PERSON }, 'ben-test-code')).status, 200);
-  const limited = await send({ text: 'The article.' }, model, { ...env, POSTS_PER_PERSON }, 'ben-test-code');
+  assert.equal((await send({ text: 'The article.' }, model, { ...env, POSTS_PER_PERSON })).status, 200);
+  const limited = await send({ text: 'The article.' }, model, { ...env, POSTS_PER_PERSON });
   assert.equal(limited.status, 429);
   assert.equal((await limited.json()).error.code, 'rate_limited');
-  assert.deepEqual(keys, ['ben', 'ben']);
+  assert.deepEqual(keys, ['203.0.113.7', '203.0.113.7']);
 });
 
 test('POST /post says so when the page has too little to work with', async () => {

@@ -34,7 +34,7 @@ test('claim mapping rejects fabricated quotes; records explicit fidelity failure
 test('complete documented review can pass without trend evidence', () => {
   const judgments = Object.fromEntries(CRITERIA.map(id => [id, { score: 1, reason: 'Reviewed against source and rubric', reviewer: 'human:Samira' }]));
   judgments.source_fidelity.claims = [{ claim: 'Start small.', quote: 'Start small.' }];
-  const r = result({ judgments, lens: 'calm' });
+  const r = result({ judgments, lens: 'story' });
   assert.equal(r.readiness, 'pass');
   assert.equal(r.trend.status, 'not_assessed');
 });
@@ -83,4 +83,18 @@ test('requested timely mode cannot pass without an evidence assessment', () => {
   const judgments = Object.fromEntries(CRITERIA.map(id => [id, { score: 1, reason: 'Reviewed', reviewer: 'human' }]));
   judgments.source_fidelity.claims = [{ claim: 'Start small.', quote: 'Start small.' }];
   assert.equal(result({ judgments, trendRequested: true }).readiness, 'needs_review');
+});
+
+test('lens evaluation snapshots the selected definition and rejects unknown IDs', () => {
+  const definition = { id: 'new_lens', label: 'A changing label', instructions: 'Use reflective questions without inventing facts.' };
+  const args = { lens: 'new_lens', lensRegistry: { new_lens: definition }, judgments: { lens_fit: { score: 2, reason: 'Reflective opening', reviewer: 'human:Samira' } } };
+  const r = result(args);
+  assert.deepEqual(r.lensDefinition, definition);
+  assert.notEqual(r.lensDefinition, definition);
+  assert.equal(r.judgments.find(j => j.id === 'lens_fit').status, 'pass');
+  const unknown = result({ ...args, lens: 'removed_lens' });
+  assert.equal(unknown.readiness, 'fail');
+  assert.equal(unknown.lensDefinition, null);
+  assert.equal(unknown.judgments.find(j => j.id === 'lens_fit').status, 'not_assessed');
+  assert.equal(result({ lens: 'story' }).lensDefinition.id, 'story');
 });

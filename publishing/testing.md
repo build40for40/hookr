@@ -12,11 +12,7 @@ Chrome 137 and later ignore `--load-extension` on the command line, so these che
 | Icon | Not run | Readable in the toolbar in light and dark Chrome themes |
 | Install prompt | Not run | Asks only for what the extension uses |
 | Opens the side panel | Not run | Clicking the icon opens Hookr in the side panel, never a popup, and the panel fills its height |
-| Access code asked | Not run | On a fresh install the panel asks for an access code before writing anything; the field hides what's typed |
-| Wrong code | Not run | A made-up code shows "That code didn't work" and stays on the access screen; nothing else breaks |
-| Right code | Not run | A real code (the reviewer one is fine) writes a post, and closing and reopening the panel doesn't ask again |
-| Change or forget code | Not run | **Access code** in the footer opens the screen with **Back**; **Forget my code on this browser** clears it and the next post asks again |
-| Revoked code | Not run | After the code is taken out of `ACCESS_CODES`, the next post shows the access screen with the wrong code message |
+| No access code | Not run | Access codes are off: on a fresh install the panel writes a post without asking for a code, and there's no **Access code** link in the footer |
 | Main flow | Not run | On a text-only Substack article, clicking the icon shows one post of 280 characters or fewer, in the author's words |
 | Substack details | Not run | The post sent starts with its title and subtitle, and no "Subscribe" or button text appears in it (check the request body in the panel's DevTools) |
 | Paywalled post | Not run | Signed out, a paid-only Substack post says it's behind a paywall and sends nothing |
@@ -34,7 +30,7 @@ Chrome 137 and later ignore `--load-extension` on the command line, so these che
 | Panel width | Not run | Dragging the panel from narrowest to widest leaves no horizontal scroll and nothing cut off |
 | Unreadable page | Not run | On `chrome://extensions` or the Web Store, clicking the icon opens the panel and it says it can't read the tab |
 | Service down | Not run | A plain error, nothing broken |
-| Privacy check | Not run | DevTools Network tab shows requests only to the Hookr service, carrying only the post's text, the mood and the access code header, and none on pages that aren't posts |
+| Privacy check | Not run | DevTools Network tab shows requests only to the Hookr service, carrying only the post's text and the mood, and none on pages that aren't posts |
 | Store install | Not run | Installing from the store gives the same version as the tested ZIP |
 | Update | Not run | Uploading the next version updates the installed copy with data intact |
 

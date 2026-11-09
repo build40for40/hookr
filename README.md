@@ -10,8 +10,7 @@ Needs Node.js 24 (see `.node-version`) and an Anthropic API key.
 
 ```sh
 npm ci
-cp .dev.vars.example .dev.vars   # then fill in ANTHROPIC_API_KEY and ACCESS_CODES
-npm run access-code -- me        # a local code: paste its pair into ACCESS_CODES
+cp .dev.vars.example .dev.vars   # then fill in ANTHROPIC_API_KEY
 npm run dev
 ```
 
@@ -19,7 +18,7 @@ That starts the API on http://localhost:8787. Then:
 
 1. Open `chrome://extensions` in Chrome 116 or later and turn on **Developer mode**.
 2. Click **Load unpacked** and choose this repo's `extension/` folder.
-3. Pin Hookr from the puzzle-piece menu, open an article and click its icon. Hookr opens in the side panel and asks for your access code: paste the local one. Then it reads the page and writes a post.
+3. Pin Hookr from the puzzle-piece menu, open an article and click its icon. Hookr opens in the side panel, reads the page and writes a post.
 4. The panel stays open when you switch tabs. Hookr can only read a tab after you click its icon there, so click it again on each article you want to hook. Moving to another page on a site you already clicked on shows **Hook this page**.
 
 ### What it reads
@@ -52,9 +51,11 @@ To check the panel's look without Chrome or the API, serve the repo (`python3 -m
 Deployed at https://hookr-api.40for40.workers.dev.
 
 - `GET /health`: `{ "ok": true }`
-- `POST /post` with `Authorization: Bearer <access code>` and `{ "text": "...", "mood": "story" }`: `{ "post": "...", "excerpt": "...", "length": 0 }`. `post` is at most 280 by X's weighted count (`length`), and `excerpt` is the passage from the article that supports it, checked against the text sent. Errors are `{ "error": { "code", "message" } }`, including 401 `unauthorised` for a missing or wrong code, 429 `rate_limited` past 20 posts a minute for one person, 503 `not_configured` when no codes are set, and 422 `insufficient_source` when the page has too little to work with.
+- `POST /post` with `{ "text": "...", "mood": "story" }`: `{ "post": "...", "excerpt": "...", "length": 0 }`. `post` is at most 280 by X's weighted count (`length`), and `excerpt` is the passage from the article that supports it, checked against the text sent. Errors are `{ "error": { "code", "message" } }`, including 429 `rate_limited` past 20 posts a minute from one IP address and 422 `insufficient_source` when the page has too little to work with.
 
-### Access codes
+### Access codes (off for now)
+
+Access codes are switched off: `POST /post` answers anyone, and the panel never asks for a code. The check is commented out in `worker/index.js` and `extension/panel.js`, and `worker/access.js` and the `access-code` script are kept, so it can come back by restoring those lines. When it was on, it worked like this.
 
 The API is for the team and Kate while we test, so `POST /post` needs a personal access code. No accounts or sign-in: the Worker secret `ACCESS_CODES` holds `name:code` pairs, comma separated, and each person pastes their code into the panel once. The Worker logs the name, never the code, on each post it writes, so Workers Logs shows who's using it, and it allows each person 20 posts a minute.
 
