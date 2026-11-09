@@ -59,12 +59,17 @@ jobs:
       - run: npm ci
 
       # The secret is absent until the org shares it with this repo.
+      # Copies the org's model key into the Worker's secrets on every deploy.
       - name: Deploy to production
         if: env.CLOUDFLARE_API_TOKEN != ''
         uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
           command: deploy
+          secrets: |
+            ANTHROPIC_API_KEY
 
       - name: Skip deploy
         if: env.CLOUDFLARE_API_TOKEN == ''

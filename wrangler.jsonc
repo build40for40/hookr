@@ -5,5 +5,7 @@
   "account_id": "9b4d3e616e55585a0ae844f424717b43",
   "compatibility_date": "2026-11-05",
   "workers_dev": true,
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // provider:model. The provider's key comes from the org secret of the same name, set by CI on deploy.
+  "vars": { "MODEL": "anthropic:claude-sonnet-5-5" }
 }

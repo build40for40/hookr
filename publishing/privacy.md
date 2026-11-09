@@ -16,7 +16,7 @@ An inventory for writing this app's section of https://build40for40.com/privacy/
 
 ## Third parties
 
-- **The model provider:** the Worker forwards the article text to whichever provider the Worker's `MODEL` secret names (Anthropic, OpenAI or Google). Name the provider actually configured in the notice, and check its API terms on retention and training before publishing.
+- **The model provider:** the Worker forwards the article text to the provider in `MODEL` (`wrangler.jsonc`), currently Anthropic (Claude Sonnet 5.5). Name the provider actually configured in the notice, and check its API terms on retention and training before publishing.
 
 ## Open before publishing
 
