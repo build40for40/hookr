@@ -1,6 +1,6 @@
 import { characters, sourceLabel, wordCount, writePost } from './api.js';
 import { DEFAULT_MOOD, MOODS, moodFor } from './moods.js';
-import { readPage, tabNotice } from './page.js';
+import { READER_FILES, readPage, tabNotice } from './page.js';
 import { clip, trace } from './trace.js';
 
 const LIMIT = 280;
@@ -15,6 +15,7 @@ const windowId = preview ? null : (await chrome.windows.getCurrent()).id;
 const CODE_KEY = 'accessCode';
 
 let page;
+let maybe = null;
 let mood = params.get('mood') ?? remembered() ?? DEFAULT_MOOD;
 let attempt = 0;
 let original = '';
@@ -26,6 +27,9 @@ let before = 'reading';
 
 const WRONG_CODE = "That code didn't work. Check you copied all of it, or ask the team for a fresh one.";
 const CANT_READ = "Hookr can't read this tab yet. Open an article, like a Substack post, and click the Hookr icon in your toolbar.";
+const NOT_A_POST = "Hookr can't find a post on this page, so it's sending nothing. Open the post itself, or highlight the words you want and hit Try again.";
+const UNSURE = "This might not be a post. If it's your writing, go for it. Or highlight just the bit you want and hit Try again.";
+const PAYWALLED = "This post is behind a paywall, so Hookr can only see the free preview. Open it signed in with full access, then hit Try again.";
 
 // ---- Moods ----------------------------------------------------------------
 
@@ -63,8 +67,9 @@ function show(state) {
   $('change-code').hidden = !code || !['result', 'failed'].includes(state);
 }
 
-function fail(message) {
+function fail(message, anyway = false) {
   $('error').textContent = message;
+  $('anyway').hidden = !anyway;
   show('failed');
 }
 
@@ -145,6 +150,7 @@ $('change-code').addEventListener('click', () => ask());
 async function read(tabId) {
   if (preview) return sample.page;
   tabId ??= (await chrome.tabs.query({ active: true, windowId }))[0]?.id;
+  await chrome.scripting.executeScript({ target: { tabId }, files: READER_FILES });
   const [{ result }] = await chrome.scripting.executeScript({ target: { tabId }, func: readPage });
   return result;
 }
@@ -188,10 +194,14 @@ $('copy').addEventListener('click', async () => {
 $('again').addEventListener('click', () => { attempt += 1; write(); });
 $('retry').addEventListener('click', () => (page ? write() : start()));
 $('hook-here').addEventListener('click', () => start());
+$('anyway').addEventListener('click', () => {
+  page = maybe;
+  write();
+});
 
 function describe(here) {
   $('source').textContent = here ? sourceLabel(here) : '';
-  $('words').textContent = here ? `Read ${wordCount(here.text).toLocaleString('en-GB')} words` : '';
+  $('words').textContent = here?.text ? `Read ${wordCount(here.text).toLocaleString('en-GB')} words` : '';
   $('promise').textContent = '';
 }
 
@@ -203,10 +213,13 @@ async function start(tabId) {
   if (mine !== run) return;
   looks += 1;
   notice(null);
-  page = here?.text ? here : null;
-  describe(page);
+  page = here?.verdict === 'post' && here.text ? here : null;
+  maybe = here?.verdict === 'unsure' ? here : null;
+  describe(here);
   if (!here) return fail(CANT_READ);
-  if (!page) return fail('This page has no words to work with. Try it on an article.');
+  if (here.paywalled) return fail(PAYWALLED);
+  if (here.verdict === 'not_post') return fail(NOT_A_POST);
+  if (maybe) return fail(UNSURE, true);
   await write();
 }
 
@@ -217,6 +230,7 @@ function notice(kind, here) {
   $('hook-here').hidden = kind !== 'new';
   if (kind === 'new') $('elsewhere-text').textContent = `Now on ${here.title || sourceLabel(here)}`;
   if (kind === 'unreadable') $('elsewhere-text').textContent = "Hookr can't read this tab. Click the Hookr icon in your toolbar to read it.";
+  if (kind === 'not_post') $('elsewhere-text').textContent = "No post here. Highlight the words you want and click the Hookr icon.";
 }
 
 async function look() {
@@ -266,6 +280,26 @@ function pin(state) {
     code = 'preview-code';
     showPost(hooks[0]);
     ask();
+  }
+  if (state === 'not-post') {
+    page = null;
+    describe({ ...sample.page, title: 'Archive', text: '' });
+    fail(NOT_A_POST);
+  }
+  if (state === 'unsure') {
+    page = null;
+    maybe = sample.page;
+    describe(maybe);
+    fail(UNSURE, true);
+  }
+  if (state === 'paywalled') {
+    page = null;
+    describe({ ...sample.page, text: '' });
+    fail(PAYWALLED);
+  }
+  if (state === 'elsewhere-not-post') {
+    showPost(hooks[0]);
+    notice('not_post');
   }
   if (state === 'blocked') {
     page = null;
